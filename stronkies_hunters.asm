@@ -14,6 +14,9 @@ STORYN = 35
 ;            is optional) and you go home: fireworks, flight, Hall of Fame.
 ;            Every place has its own colours, boss shape, boss attack
 ;            list (bs_pat) and boss attack speed (bs_int).
+;            Ghost types: fast, splitter (shrinks on the first hit), dodger.
+;            Weather per place: rain, lightning, fog, wind, thunderstorm.
+;            A warning screen announces every boss.
 ;  Cheat:    type GHOST in the main menu (test mode, no Hall of Fame).
 ;
 ;  Sprites:  0 ghost, 1 hunter (animated: stand, walk x2, shoot),
@@ -31,7 +34,7 @@ STORYN = 35
 ;  MEMORY MAP (VIC bank 0 is used for everything the VIC chip reads)
 ;    $0801-$0c7f  BASIC stub, variables, sprite blocks ($0840 and up)
 ;    $0c80,$0cc0  plane and map car sprites
-;    $0d00-$0dff  hunter walk / shoot sprites (3 frames)
+;    $0d00-$0e7f  hunter walk / shoot sprites, ghost wobble + mini ghost
 ;    $0f00-$0fff  boss sprites of Manhattan, Harbor, JFK, Statue
 ;    $1000-$20a5  Ghostbusters tune (resident, played by the IRQ)
 ;    $20b0        story text          $2640 flight to New York
@@ -3290,7 +3293,8 @@ gn0     jsr powerupdate          ; blaster power: drain / recharge
         and #$0f
         bne ph2ok
         inc ph2
-ph2ok   ldx ph
+ph2ok   jsr gtmove              ; ghost type: faster / dodging
+        ldx ph
         clc
         lda sintab_x,x          ; X = 50..290 (9 bit)
         adc #50
@@ -3330,7 +3334,8 @@ doright clc
         lda pxh
         adc #0
         sta pxh
-notright jsr powupd                ; falling power-up
+notright jsr windpush            ; (JFK) gusts push the hunter
+        jsr powupd                ; falling power-up
 
         lda COLLISION           ; hardware sprite collisions (read once)
         sta col
@@ -3664,7 +3669,7 @@ nozap
 flashing lda flash
         sta BORDER
         sta SPCOL
-noflash
+noflash jsr ghostlook          ; wobble frame + colour of the ghost type
         lda ht                  ; red border while recovering
         beq noht
         dec ht
@@ -3685,7 +3690,8 @@ nomus
         bne gcont
         jmp gameover
 gcont
-bodyend jsr hunteranim          ; walk / shoot frame of the hunter
+bodyend jsr weather              ; rain, wind streaks, lightning, fog
+        jsr hunteranim          ; walk / shoot frame of the hunter
         jsr splits
         jmp gframe
 
@@ -3700,8 +3706,7 @@ splits  jsr waitfar             ; raster 154: far skyline rows get their own fin
         lda hazecol
         sta BGCOL
         jsr waitstr             ; raster 238 (street row): sky colour back
-        ldx nm_cur
-        lda th_sky,x
+        lda skycol              ; (lightning / fog change it)
         sta BGCOL
         jsr waitbot             ; raster 242: the bottom bezel must not scroll
         lda #$c0
@@ -3711,7 +3716,10 @@ splits  jsr waitfar             ; raster 154: far skyline rows get their own fin
 ; ---------------------------------------------------------------------
 ;  ghost was hit: +10 points (BCD), noise, flash, ghost jumps away
 ; ---------------------------------------------------------------------
-gothit  lda #$10
+gothit  jsr gtsplit             ; splitter: first hit only shrinks it
+        bcc gh_n
+        rts
+gh_n    lda #$10
         ldx #0
         jsr addscore
         inc hits                ; the ghosts get meaner
@@ -3757,7 +3765,8 @@ gothit  lda #$10
         bcc gh9
         jsr rgkill
         jsr startboss
-gh9     rts
+gh9     jsr picktype            ; type of the next ghost
+        rts
 
 ; ---------------------------------------------------------------------
 ;  hunter was hit by slime: lose a life
@@ -4055,6 +4064,8 @@ stl2    lda needtab,x
         jsr showplace           ; name of the place on the second row
         jsr settheme            ; colours of this place
         jsr farinit             ; far skyline
+        jsr picktype            ; first ghost of the level
+        jsr weatherinit
         lda #1
         sta mtimer
         sta gmode               ; 1 = car arrives, hunter gets out, countdown
@@ -7342,6 +7353,79 @@ spr_hsh
         .byte 0,102,0
         .byte 1,231,128
         .byte 1,231,128
+; ---------------------------------------------------------------------
+;  ghost wobble frames and the mini ghost (after a splitter was hit)
+; ---------------------------------------------------------------------
+        * = $0dc0
+spr_gw1
+        .byte 0,0,0
+        .byte 7,255,224
+        .byte 31,255,248
+        .byte 63,255,252
+        .byte 63,255,252
+        .byte 127,255,254
+        .byte 127,255,254
+        .byte 113,255,142
+        .byte 117,255,174
+        .byte 113,255,142
+        .byte 127,255,254
+        .byte 255,255,252
+        .byte 255,255,252
+        .byte 252,0,252
+        .byte 254,1,252
+        .byte 255,255,252
+        .byte 255,255,252
+        .byte 255,255,252
+        .byte 127,255,248
+        .byte 59,255,156
+        .byte 49,255,24
+        * = $0e00
+spr_gw2
+        .byte 0,0,0
+        .byte 7,255,224
+        .byte 31,255,248
+        .byte 63,255,252
+        .byte 63,255,252
+        .byte 127,255,254
+        .byte 127,255,254
+        .byte 113,255,142
+        .byte 117,255,174
+        .byte 113,255,142
+        .byte 127,255,254
+        .byte 63,255,255
+        .byte 63,255,255
+        .byte 63,0,63
+        .byte 63,128,127
+        .byte 63,255,255
+        .byte 63,255,255
+        .byte 63,255,255
+        .byte 31,255,254
+        .byte 57,255,220
+        .byte 48,255,140
+        * = $0e40
+spr_gmini
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,126,0
+        .byte 3,255,0
+        .byte 3,255,192
+        .byte 3,189,192
+        .byte 3,255,192
+        .byte 3,255,192
+        .byte 3,255,192
+        .byte 2,219,64
+        .byte 2,90,64
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        * = CODEORG
         * = CODEORG
         * = CODEORG
 
@@ -7705,6 +7789,8 @@ gl4     dec grow
 
 ; ---- boss approaching: the screen stops, footsteps and growls, the boss grows from far away
 startboss
+        lda #WARNT              ; first a warning screen
+        sta bwarn
         lda #5
         sta bstate
         lda #2
@@ -7715,7 +7801,10 @@ startboss
         rts
 
 approachseq
-        lda gph
+        lda bwarn
+        beq ap_start
+        jmp warnscreen
+ap_start lda gph
         bne ap_a
         lda gcnt
         bne ap_a
@@ -7738,9 +7827,7 @@ approachseq
         lda #>appstr
         sta PTR+1
         jsr printstr
-        lda #3                  ; boss warning siren
-        jsr fxstart
-ap_a    ldx gph
+ap_a     ldx gph
         lda gcnt
         cmp apdur,x
         beq ap_nx
@@ -8513,8 +8600,8 @@ gt3     rts
 ;  played on voice 3 (game) or voice 2 (cutscenes), one note per step.
 ;  0 caught a ghost   1 hunter hurt   2 GO!   3 boss warning
 ; ---------------------------------------------------------------------
-fx_idx  .byte 0,17,50,67
-fx_vc   .byte 14,14,7,0          ; voice offset: 14 = voice 3, 7 = voice 2, 0 = voice 1
+fx_idx  .byte 0,17,50,67,100
+fx_vc   .byte 14,14,7,0,14         ; voice offset: 14 = voice 3, 7 = voice 2, 0 = voice 1
 fxdat
         .byte 2,$00,$06,$81     ; 0: thump, then rising ding
         .byte 3,$dc,$2b,$11
@@ -8543,6 +8630,11 @@ fxdat
         .byte 5,$dc,$2b,$41
         .byte 5,$89,$3a,$41
         .byte 5,$dc,$2b,$41
+        .byte 0
+        .byte 6,$00,$0a,$81     ; 4: thunder, a rolling rumble
+        .byte 8,$00,$07,$81
+        .byte 10,$00,$05,$81
+        .byte 14,$00,$03,$81
         .byte 0
 fxi     .byte 0
 fxv     .byte 0
@@ -8628,6 +8720,7 @@ settheme                        ; sky / building colours, boss colour
         ldx nm_cur
         lda th_sky,x
         sta BGCOL
+        sta skycol
         lda th_b1,x
         sta BGCOL1
         lda th_b3,x
@@ -9263,3 +9356,380 @@ sc_bobgy                        ; ghost height = 95 + bobbing
         adc #95
         sta sc_gy
         rts
+
+; ---------------------------------------------------------------------
+;  GHOST TYPES.  0 normal (green)  1 fast (cyan)  2 splitter (orange):
+;  the first hit shrinks it into a fast mini ghost (4), the second
+;  catches it  3 dodger (purple): jumps away when the beam comes close.
+;  The type of the next ghost is picked per place (gt_tab).
+; ---------------------------------------------------------------------
+gtype   .byte 0
+gdcd    .byte 0
+gtcol   .byte 5,3,8,4,15
+gwf     .byte spr_ghost/64,spr_gw1/64,spr_ghost/64,spr_gw2/64
+gt_tab  .byte 0,0,0,0,0,0,1,1    ; Harlem:    normal, some fast
+        .byte 0,0,0,1,1,3,3,0    ; Manhattan: + dodgers
+        .byte 0,0,2,2,1,1,0,3    ; Harbor:    + splitters
+        .byte 0,1,1,2,2,3,3,0    ; JFK:       all types
+        .byte 1,1,2,2,3,3,1,3    ; Statue:    hardly any normal ghost
+
+picktype
+        lda OSC3
+        and #7
+        sta t1
+        lda nm_cur
+        asl
+        asl
+        asl
+        ora t1
+        tax
+        lda gt_tab,x
+        sta gtype
+        lda #0
+        sta gdcd
+        rts
+
+gtmove                          ; called before the ghost position is worked out
+        lda gtype
+        beq gm_r
+        cmp #3
+        beq gm_dodge
+        cmp #2
+        beq gm_r
+        inc ph                  ; fast and mini ghosts: twice the speed
+        inc ph2
+        inc ph2
+gm_r    rts
+gm_dodge
+        lda gdcd
+        beq gd1
+        dec gdcd
+        rts
+gd1     lda fon                 ; beam on ...
+        beq gm_r
+        lda gxh
+        cmp pxh
+        bne gm_r
+        lda gxl                 ; ... and close to the ghost: jump away along the path
+        sec
+        sbc pxl
+        bcs gd2
+        eor #$ff
+        clc
+        adc #1
+gd2     cmp #22
+        bcs gm_r
+        lda ph
+        clc
+        adc #53
+        sta ph
+        lda #60
+        sta gdcd
+        rts
+
+gtsplit                         ; C=1: the hit was only the first half of a splitter
+        lda gtype
+        cmp #2
+        bne gs_no
+        lda #4
+        sta gtype
+        lda #$05
+        ldx #0
+        jsr addscore
+        jsr showscore
+        lda #$c8
+        sta SID+14
+        lda #$1e
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #8
+        sta zap
+        lda #12
+        sta flash
+        lda OSC3
+        and #$7f
+        clc
+        adc #40
+        clc
+        adc ph
+        sta ph
+        sec
+        rts
+gs_no   clc
+        rts
+
+ghostlook                       ; colour of the type, wobbling frames (faster for fast ghosts)
+        lda flash
+        bne gk1
+        ldx gtype
+        lda gtcol,x
+        sta SPCOL
+gk1     lda gtype
+        cmp #4
+        bne gk2
+        lda #spr_gmini/64
+        bne gk3
+gk2     lda ph
+        lsr
+        lsr
+        lsr
+        and #3
+        tax
+        lda gwf,x
+gk3     sta SPRPTR
+        rts
+
+; ---------------------------------------------------------------------
+;  WEATHER per place (th_wx bits): 1 rain  2 lightning  4 fog  8 wind
+;  Harlem rain, Manhattan lightning, Harbor fog, JFK wind, Statue storm
+; ---------------------------------------------------------------------
+th_wx   .byte 1,2,4,8,3
+wxm     .byte 0
+skycol  .byte 0
+ltim    .byte 100
+lfl     .byte 0
+dglyph  .byte 0
+dcol    .byte 0
+rnx     .byte 3,9,14,20,25,29,33,37
+rny     .byte 2,6,4,9,3,8,5,11
+rowlo
+        .byte 0,40,80,120,160,200,240,24,64,104,144,184,224,8,48,88,128,168,208,248,32,72,112,152,192
+rowhi
+        .byte 4,4,4,4,4,4,4,5,5,5,5,5,5,6,6,6,6,6,6,6,7,7,7,7,7
+
+weatherinit
+        ldx nm_cur
+        lda th_wx,x
+        sta wxm
+        lda th_sky,x
+        sta skycol
+        lda #0
+        sta lfl
+        lda #90
+        sta ltim
+        rts
+
+weather
+        ldx nm_cur
+        lda th_sky,x
+        sta skycol              ; normal sky ...
+        lda wxm
+        and #4
+        beq wx1
+        lda ph                  ; fog: now and then the sky turns light blue
+        and #$c0
+        cmp #$80
+        bne wx1
+        lda #14
+        sta skycol
+wx1     lda wxm
+        and #2
+        beq wx3
+        lda lfl                 ; lightning: double flash, then thunder
+        beq wx2
+        dec lfl
+        and #2
+        bne wx3
+        lda #1
+        sta skycol
+        jmp wx3
+wx2     dec ltim
+        bne wx3
+        lda OSC3
+        and #$7f
+        clc
+        adc #110
+        sta ltim
+        lda #8
+        sta lfl
+        lda fxon
+        bne wx3
+        lda #4
+        jsr fxstart
+wx3     lda wxm
+        and #1
+        beq wx4
+        jsr raindrops
+wx4     lda wxm
+        and #8
+        beq wx5
+        jsr windstr
+wx5     rts
+
+dpos                            ; X = drop: PTR = its screen cell
+        ldy rny,x
+        lda rowlo,y
+        clc
+        adc rnx,x
+        sta PTR
+        lda rowhi,y
+        adc #0
+        sta PTR+1
+        rts
+derase  jsr dpos
+        ldy #0
+        lda (PTR),y
+        cmp dglyph
+        bne de1
+        lda #$20
+        sta (PTR),y
+de1     rts
+ddraw   jsr dpos
+        ldy #0
+        lda (PTR),y
+        cmp #$20                ; only on empty sky
+        bne dd1
+        lda dglyph
+        sta (PTR),y
+        lda PTR+1
+        clc
+        adc #$d4                ; colour RAM = screen + $d400
+        sta PTR+1
+        lda dcol
+        sta (PTR),y
+dd1     rts
+
+raindrops
+        lda #31                 ; vertical line glyph
+        sta dglyph
+        lda #14
+        sta dcol
+        ldx #7
+rd_l    txa
+        eor ph
+        and #1
+        bne rd_n                ; half of the drops rest each frame
+        jsr derase
+        inc rny,x
+        lda rny,x
+        cmp #13
+        bcc rd_d
+        lda #2                  ; back to the top, new column
+        sta rny,x
+        lda OSC3
+        and #63
+        cmp #40
+        bcc rd_c
+        sbc #40
+rd_c    sta rnx,x
+rd_d    jsr ddraw
+rd_n    dex
+        bpl rd_l
+        rts
+
+windstr
+        lda #29                 ; horizontal dashes glyph
+        sta dglyph
+        lda #15
+        sta dcol
+        ldx #5
+ws_l    jsr derase
+        dec rnx,x
+        bpl ws_d
+        lda #39
+        sta rnx,x
+        lda OSC3
+        and #7
+        clc
+        adc #3
+        sta rny,x
+ws_d    jsr ddraw
+        dex
+        bpl ws_l
+        rts
+
+windpush                        ; JFK: every 4th frame of a gust the hunter is pushed 1 pixel
+        lda wxm
+        and #8
+        beq wp_r
+        lda ph
+        bpl wp_r                ; (calm for half of the time)
+        and #3
+        cmp #3
+        bne wp_r
+        lda ph
+        and #$40
+        bne wp_right
+        lda pxh                 ; left
+        bne wp_l2
+        lda pxl
+        cmp #31
+        bcc wp_r
+wp_l2   sec
+        lda pxl
+        sbc #1
+        sta pxl
+        lda pxh
+        sbc #0
+        sta pxh
+        rts
+wp_right
+        lda pxh
+        beq wp_r2
+        lda pxl
+        cmp #44
+        bcs wp_r
+wp_r2   clc
+        lda pxl
+        adc #1
+        sta pxl
+        lda pxh
+        adc #0
+        sta pxh
+wp_r    rts
+
+; ---------------------------------------------------------------------
+;  BOSS WARNING SCREEN: flashing border, siren and "BOSS INCOMING"
+;  before the approach scene.  bwarn counts down from WARNT.
+; ---------------------------------------------------------------------
+WARNT   = 75
+bwarn   .byte 0
+wbc     .byte 2,GB
+warnstr
+        .byte $13,$11,$11,$11,$11,$11,$11,$11
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "!!! WARNING !!!"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "BOSS INCOMING"
+        .byte 0
+
+warnscreen
+        lda bwarn
+        cmp #WARNT
+        bne wn1
+        lda #$02                ; only the hunter stays
+        sta cmask
+        lda #<warnstr
+        sta PTR
+        lda #>warnstr
+        sta PTR+1
+        jsr printstr
+        lda #3                  ; the siren
+        jsr fxstart
+wn1     lda bwarn               ; border and letters flash every 4 frames
+        lsr
+        lsr
+        and #1
+        tax
+        lda wbc,x
+        sta BORDER
+        lda wcl,x
+        ldy #16
+wn2     sta COLORRAM+7*40+12,y
+        sta COLORRAM+9*40+12,y
+        dey
+        bpl wn2
+        dec bwarn
+        bne wn9
+        lda #GB                 ; end: border back, words away
+        sta BORDER
+        ldy #16
+        lda #$20
+wn3     sta SCREEN+7*40+12,y
+        sta SCREEN+9*40+12,y
+        dey
+        bpl wn3
+wn9     jmp cinplace
+wcl     .byte 2,7
