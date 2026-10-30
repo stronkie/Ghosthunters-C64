@@ -22,4 +22,4 @@ The current release is in `../v1.0` (and the root folder).
 | `v15-before_cheat2` | fireworks ending and flight home |
 | `v15-before_bonus` | cheat label next to CAUGHT, full power bar, boss attacks only from the boss |
 
-All builds were tested only in a custom 6502 emulator, not on real hardware.
+These older builds were only tested in a custom 6502 emulator. Only the current release (`../v1.0`) has been confirmed on a real Commodore 64.
