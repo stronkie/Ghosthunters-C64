@@ -5,4 +5,4 @@
 - The raster split code is now one shared routine (`splits`) used by the game and the intro scene.
 - The New York progress variables moved to RAM under BASIC to make room for the new hunter sprites.
 
-Built and regression-tested in a custom 6502 emulator; not yet tested on real hardware (v1.0 to v1.6 were).
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.
