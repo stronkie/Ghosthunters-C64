@@ -6,4 +6,4 @@
 - Side effect: the old occasional one-frame jump of the skyline scroll (about 4% of frames) is gone, because the game loop now waits for the right raster line every frame.
 - "BOSS CAPTURED!" / "LEVEL COMPLETE!" texts moved up two rows to make room for the far city.
 
-Built and regression-tested in a custom 6502 emulator; not yet tested on real hardware (v1.0 to v1.4 were). Please check especially that the far city scrolls smoothly and the colours look right on a real screen.
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.
