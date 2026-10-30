@@ -16,8 +16,9 @@ STORYN = 35
 ;            list (bs_pat) and boss attack speed (bs_int).
 ;  Cheat:    type GHOST in the main menu (test mode, no Hall of Fame).
 ;
-;  Sprites:  0 ghost, 1 hunter, 2+3 proton beam, 4 slime ball,
-;            5 boss / phantom, 6 ghost trap, 7 suction ray
+;  Sprites:  0 ghost, 1 hunter (animated: stand, walk x2, shoot),
+;            2+3 proton beam, 4 slime ball, 5 boss / phantom,
+;            6 ghost trap, 7 suction ray
 ;  SID:      menus = 3 voice Ghostbusters tune (raster IRQ at line 253),
 ;            game  = riff on voice 1, beam on voice 2, noise/effects on 3
 ;  Screen:   scrolling New York skyline in extended colour text mode,
@@ -30,7 +31,7 @@ STORYN = 35
 ;  MEMORY MAP (VIC bank 0 is used for everything the VIC chip reads)
 ;    $0801-$0c7f  BASIC stub, variables, sprite blocks ($0840 and up)
 ;    $0c80,$0cc0  plane and map car sprites
-;    $0d00-$0ecc  New York progress variables, victory screen
+;    $0d00-$0dff  hunter walk / shoot sprites (3 frames)
 ;    $0f00-$0fff  boss sprites of Manhattan, Harbor, JFK, Statue
 ;    $1000-$20a5  Ghostbusters tune (resident, played by the IRQ)
 ;    $20b0        story text          $2640 flight to New York
@@ -39,7 +40,8 @@ STORYN = 35
 ;    $4000-       data: screens, hall of fame, skyline, intro bitmap
 ;    CODEORG      main program (address set by build15.py)
 ;    $a000-$bdff  RAM under BASIC (BASIC is off, $01 = $36):
-;                 cutscenes, sound effects, places of New York
+;                 cutscenes, intro scene, hunter animation, sound effects,
+;                 New York progress, places of New York
 ;    $c000        unpacker (only while starting up)
 ; =====================================================================
 
@@ -2757,6 +2759,8 @@ clrsid  sta SID,x               ; silence the SID
 again   jsr intro               ; 30 second logo screen
         lda iskf
         bne again2
+        jsr introscene          ; animated opening scene
+        bcc again2              ; (skipped)
         jsr story               ; then the story rolls by
         bcc again2              ; (skipped)
         jsr flight              ; map, plane Amsterdam -> New York, fade
@@ -3681,7 +3685,11 @@ nomus
         bne gcont
         jmp gameover
 gcont
-bodyend jsr waitfar             ; raster 154: far skyline rows get their own fine scroll
+bodyend jsr hunteranim          ; walk / shoot frame of the hunter
+        jsr splits
+        jmp gframe
+
+splits  jsr waitfar             ; raster 154: far skyline rows get their own fine scroll
         lda ffine
         ora #$c0
         sta D016
@@ -3698,7 +3706,7 @@ bodyend jsr waitfar             ; raster 154: far skyline rows get their own fin
         jsr waitbot             ; raster 242: the bottom bezel must not scroll
         lda #$c0
         sta D016
-        jmp gframe
+        rts
 
 ; ---------------------------------------------------------------------
 ;  ghost was hit: +10 points (BCD), noise, flash, ghost jumps away
@@ -6879,179 +6887,6 @@ sprreset                        ; all sprites back to their game set-up
         sta SPYEX
         rts
 
-        * = $0d00               ; free RAM: New York progress + victory screen
-won     .byte 0                 ; 1 = the game was completed (for the Hall of Fame)
-nm_clr  .byte 0                 ; bit per place: 1 Harlem, 2 Manhattan, 4 Harbor, 8 JFK, 16 Statue
-nm_bt   .byte 0
-nm_bc   .byte 0
-nm_bit  .byte 1,2,4,8,16
-nb_lo   .byte $a9,$94,$2a,$ed,$80
-nb_hi   .byte 4,5,7,6,6
-nb_len  .byte 6,9,6,3,7
-
-nm_blink                        ; names of cleared places blink on the map
-        inc nm_bt
-        lda nm_bt
-        and #$10
-        beq nb_w
-        lda #6
-        bne nb_s
-nb_w    lda #1
-nb_s    sta nm_bc
-        ldx #4
-nb_l    lda nm_bit,x
-        and nm_clr
-        beq nb_n
-        lda nb_lo,x
-        sta PTR
-        lda nb_hi,x
-        clc
-        adc #$d4
-        sta PTR+1
-        ldy nb_len,x
-        dey
-        lda nm_bc
-nb_c    sta (PTR),y
-        dey
-        bpl nb_c
-nb_n    dex
-        bpl nb_l
-        rts
-
-winscr  lda #1                  ; all four places cleared: you have won
-        sta won
-        lda #0
-        sta SPENA
-        sta MSBX
-        jsr ecmoff
-        lda #$0b
-        sta D011
-        lda #$1e
-        sta D018
-        lda #0
-        sta BORDER
-        sta BGCOL
-        ldx #0
-        lda #$20
-ws1     sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne ws1
-        ldx #232
-ws2     sta SCREEN+767,x
-        dex
-        bne ws2
-        lda #1
-        jsr fillcol
-        lda #<wn_txt
-        sta PTR
-        lda #>wn_txt
-        sta PTR+1
-        jsr fltxt
-        lda #$1b
-        sta D011
-        jsr tunechk
-        jsr winbonus
-        jsr fwinit
-        lda #<500               ; ten seconds of fireworks behind the text
-        sta fw_n
-        lda #>500
-        sta fw_n+1
-ws3     jsr waitframe
-        jsr fwupd
-        lda fw_n
-        bne ws4
-        dec fw_n+1
-ws4     dec fw_n
-        lda fw_n
-        ora fw_n+1
-        bne ws3
-        jsr nm_fade             ; fade to the world map: back to Amsterdam
-        lda #1
-        sta flrev
-        jsr flight
-        lda #0
-        sta flrev
-        lda #$0b
-        sta D011
-        jsr findrank            ; as after game over: high score entry, credits, title (a win always counts)
-        lda #$c0
-        sta D016
-        jmp gotail
-cheat   .byte 0                 ; test cheat: unlimited lives, no high score, N = next level
-chpos   .byte 0
-chprev  .byte 64
-chtmp   .byte 0
-chtbl   .byte 26,29,38,13,22    ; G H O S T
-chlab   .byte 3,8,5,1,20           ; CHEAT, next to the CAUGHT counter
-
-cheatchk                        ; type GHOST in the menu to switch the cheat on / off
-        lda key
-        cmp chprev
-        beq cc9
-        sta chprev
-        cmp #64
-        beq cc9
-        ldx chpos
-        cmp chtbl,x
-        beq cc_ok
-        ldx #0
-        cmp chtbl
-        bne cc_s
-        ldx #1
-cc_s    stx chpos
-cc9     rts
-cc_ok   inx
-        cpx #5
-        bcc cc_s
-        lda #0
-        sta chpos
-        lda cheat
-        eor #1
-        sta cheat
-        lda BORDER
-        pha
-        lda #12
-        sta chtmp
-cc_f    lda chtmp
-        sta BORDER
-        jsr waitframe
-        dec chtmp
-        bne cc_f
-        pla
-        sta BORDER
-        rts
-
-cfindrank                       ; with the cheat on nothing goes into the Hall of Fame
-        lda cheat
-        beq cf1
-        lda #255
-        sta rank
-        rts
-cf1     jmp findrank
-
-wn_txt
-        .byte 76,5,1
-        .text "CONGRATULATIONS,"
-        .byte 0
-        .byte 156,5,1
-        .text "YOU HAVE CLEARED"
-        .byte 0
-        .byte 237,5,7
-        .text "NEW YORK CITY"
-        .byte 0
-        .byte 98,6,1
-        .text "YOU CAN GO HOME NOW"
-        .byte 0
-        .byte 218,6,7
-        .text "LIVES BONUS:"
-        .byte 0
-        .byte 42,7,7
-        .text "FINAL SCORE:"
-        .byte 0
-        .byte $ff
-
         * = $2d80               ; free RAM: fireworks of the victory screen
 fw_n    .word 0
 fw_st   .byte 0,0,0
@@ -7435,6 +7270,79 @@ spr_boss_st
         .byte 255,255,255
         .byte 255,255,255
         .byte 255,255,255
+; ---------------------------------------------------------------------
+;  animated hunter: walk frames and the shooting pose (standing = spr_player)
+; ---------------------------------------------------------------------
+        * = $0d00
+spr_hw1
+        .byte 0,60,0
+        .byte 0,126,0
+        .byte 0,126,0
+        .byte 0,60,0
+        .byte 0,24,0
+        .byte 15,255,0
+        .byte 31,255,128
+        .byte 31,255,192
+        .byte 31,255,224
+        .byte 31,255,224
+        .byte 15,255,192
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,102,0
+        .byte 0,198,0
+        .byte 1,134,0
+        .byte 3,6,0
+        .byte 7,6,0
+        .byte 15,7,128
+        .byte 15,7,128
+        * = $0d40
+spr_hw2
+        .byte 0,60,0
+        .byte 0,126,0
+        .byte 0,126,0
+        .byte 0,60,0
+        .byte 0,24,0
+        .byte 15,255,0
+        .byte 31,255,128
+        .byte 31,255,192
+        .byte 31,255,224
+        .byte 31,255,224
+        .byte 15,255,192
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,102,0
+        .byte 0,99,0
+        .byte 0,97,128
+        .byte 0,96,192
+        .byte 0,96,224
+        .byte 1,224,240
+        .byte 1,224,240
+        * = $0d80
+spr_hsh
+        .byte 6,60,96
+        .byte 6,126,96
+        .byte 6,126,96
+        .byte 7,60,224
+        .byte 3,24,192
+        .byte 15,255,224
+        .byte 31,255,128
+        .byte 31,255,192
+        .byte 31,255,224
+        .byte 31,255,224
+        .byte 15,255,192
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,255,0
+        .byte 0,102,0
+        .byte 0,102,0
+        .byte 0,102,0
+        .byte 0,102,0
+        .byte 0,102,0
+        .byte 1,231,128
+        .byte 1,231,128
+        * = CODEORG
         * = CODEORG
 
         * = CODEORG
@@ -8817,4 +8725,541 @@ bossptr                         ; sprite 5 = the boss shape of this place
         ldx nm_cur
         lda bs_ptr,x
         sta SPRPTR+5
+        rts
+
+; ---------------------------------------------------------------------
+;  NEW YORK PROGRESS and VICTORY SCREEN
+; ---------------------------------------------------------------------
+won     .byte 0                 ; 1 = the game was completed (for the Hall of Fame)
+nm_clr  .byte 0                 ; bit per place: 1 Harlem, 2 Manhattan, 4 Harbor, 8 JFK, 16 Statue
+nm_bt   .byte 0
+nm_bc   .byte 0
+nm_bit  .byte 1,2,4,8,16
+nb_lo   .byte $a9,$94,$2a,$ed,$80
+nb_hi   .byte 4,5,7,6,6
+nb_len  .byte 6,9,6,3,7
+
+nm_blink                        ; names of cleared places blink on the map
+        inc nm_bt
+        lda nm_bt
+        and #$10
+        beq nb_w
+        lda #6
+        bne nb_s
+nb_w    lda #1
+nb_s    sta nm_bc
+        ldx #4
+nb_l    lda nm_bit,x
+        and nm_clr
+        beq nb_n
+        lda nb_lo,x
+        sta PTR
+        lda nb_hi,x
+        clc
+        adc #$d4
+        sta PTR+1
+        ldy nb_len,x
+        dey
+        lda nm_bc
+nb_c    sta (PTR),y
+        dey
+        bpl nb_c
+nb_n    dex
+        bpl nb_l
+        rts
+
+winscr  lda #1                  ; all four places cleared: you have won
+        sta won
+        lda #0
+        sta SPENA
+        sta MSBX
+        jsr ecmoff
+        lda #$0b
+        sta D011
+        lda #$1e
+        sta D018
+        lda #0
+        sta BORDER
+        sta BGCOL
+        ldx #0
+        lda #$20
+ws1     sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne ws1
+        ldx #232
+ws2     sta SCREEN+767,x
+        dex
+        bne ws2
+        lda #1
+        jsr fillcol
+        lda #<wn_txt
+        sta PTR
+        lda #>wn_txt
+        sta PTR+1
+        jsr fltxt
+        lda #$1b
+        sta D011
+        jsr tunechk
+        jsr winbonus
+        jsr fwinit
+        lda #<500               ; ten seconds of fireworks behind the text
+        sta fw_n
+        lda #>500
+        sta fw_n+1
+ws3     jsr waitframe
+        jsr fwupd
+        lda fw_n
+        bne ws4
+        dec fw_n+1
+ws4     dec fw_n
+        lda fw_n
+        ora fw_n+1
+        bne ws3
+        jsr nm_fade             ; fade to the world map: back to Amsterdam
+        lda #1
+        sta flrev
+        jsr flight
+        lda #0
+        sta flrev
+        lda #$0b
+        sta D011
+        jsr findrank            ; as after game over: high score entry, credits, title (a win always counts)
+        lda #$c0
+        sta D016
+        jmp gotail
+cheat   .byte 0                 ; test cheat: unlimited lives, no high score, N = next level
+chpos   .byte 0
+chprev  .byte 64
+chtmp   .byte 0
+chtbl   .byte 26,29,38,13,22    ; G H O S T
+chlab   .byte 3,8,5,1,20           ; CHEAT, next to the CAUGHT counter
+
+cheatchk                        ; type GHOST in the menu to switch the cheat on / off
+        lda key
+        cmp chprev
+        beq cc9
+        sta chprev
+        cmp #64
+        beq cc9
+        ldx chpos
+        cmp chtbl,x
+        beq cc_ok
+        ldx #0
+        cmp chtbl
+        bne cc_s
+        ldx #1
+cc_s    stx chpos
+cc9     rts
+cc_ok   inx
+        cpx #5
+        bcc cc_s
+        lda #0
+        sta chpos
+        lda cheat
+        eor #1
+        sta cheat
+        lda BORDER
+        pha
+        lda #12
+        sta chtmp
+cc_f    lda chtmp
+        sta BORDER
+        jsr waitframe
+        dec chtmp
+        bne cc_f
+        pla
+        sta BORDER
+        rts
+
+cfindrank                       ; with the cheat on nothing goes into the Hall of Fame
+        lda cheat
+        beq cf1
+        lda #255
+        sta rank
+        rts
+cf1     jmp findrank
+
+wn_txt
+        .byte 76,5,1
+        .text "CONGRATULATIONS,"
+        .byte 0
+        .byte 156,5,1
+        .text "YOU HAVE CLEARED"
+        .byte 0
+        .byte 237,5,7
+        .text "NEW YORK CITY"
+        .byte 0
+        .byte 98,6,1
+        .text "YOU CAN GO HOME NOW"
+        .byte 0
+        .byte 218,6,7
+        .text "LIVES BONUS:"
+        .byte 0
+        .byte 42,7,7
+        .text "FINAL SCORE:"
+        .byte 0
+        .byte $ff
+
+; ---------------------------------------------------------------------
+;  ANIMATED HUNTER: standing / two walking frames / shooting pose.
+;  Called every game frame (bodyend): moved since last frame = walking,
+;  beam on = shooting.
+; ---------------------------------------------------------------------
+hpx     .byte 0
+hanc    .byte 0
+hunteranim
+        lda pxl
+        ldx #0
+        cmp hpx
+        beq ha0
+        inx                     ; the hunter moved
+        sta hpx
+ha0     lda fon
+        beq ha1
+        lda #spr_hsh/64         ; beam on: arms up
+        bne ha_set
+ha1     cpx #0
+        beq ha_st
+        inc hanc                ; a new step every 4 frames
+        lda hanc
+        and #4
+        beq ha_w1
+        lda #spr_hw2/64
+        bne ha_set
+ha_w1   lda #spr_hw1/64
+        bne ha_set
+ha_st   lda #spr_player/64
+ha_set  sta SPRPTR+1
+        rts
+
+; ---------------------------------------------------------------------
+;  INTRO SCENE (between the logo and the story): the night skyline with
+;  its two scrolling layers, the hunter walks in, a ghost appears, the
+;  hunter blasts it away.  C=1 finished, C=0 skipped (any key / fire).
+;  Phases (frames): 0 walk in 150, 1 ghost arrives 110, 2 hover 70,
+;                   3 blast 120, 4 ghost flees 70, 5 hold 80
+; ---------------------------------------------------------------------
+scdur   .byte 150,110,70,120,70,80
+sc_ph   .byte 0
+sc_t    .byte 0
+sc_ci   .byte 0
+sc_cap  .byte 0
+sc_nm   .byte 0
+sc_gxl  .byte 0
+sc_gxh  .byte 0
+sc_gy   .byte 0
+sc_bob  .byte 0,1,2,3,4,5,5,6,6,6,5,5,4,3,2,1
+sc_txt
+        .text "    NEW YORK. A COLD OCTOBER NIGHT.     "
+        .text "   SOMETHING IS WRONG IN THE CITY...    "
+        .text "      MARK STRONKS - GHOST HUNTER       "
+        .text "     ONE MAN. ONE TRAP. ONE CHANCE.     "
+        .text "    SHOOT THE GHOSTS. SAVE THE CITY!    "
+
+introscene
+        lda #$4b                ; screen off while drawing (extended colour mode)
+        sta D011
+        lda #0
+        sta SPENA
+        sta MSBX
+        sta BORDER
+        sta SPMC
+        sta $d01b               ; sprites in front
+        sta sc_ph
+        sta sc_t
+        sta sc_cap
+        sta fon
+        jsr tunechk             ; the tune keeps playing
+        ldx #0                  ; clear the screen
+        lda #$20
+sc_c1   sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne sc_c1
+        ldx #232
+sc_c1b  sta SCREEN+767,x
+        dex
+        bne sc_c1b
+        lda nm_cur              ; the colours of Harlem, then back
+        sta sc_nm
+        lda #0
+        sta nm_cur
+        jsr ecmon
+        lda #$4b
+        sta D011
+        lda #$1e
+        sta D018
+        jsr settheme
+        jsr drawsky
+        jsr farinit
+        lda sc_nm
+        sta nm_cur
+        lda #7
+        sta fine
+        lda #40
+        sta mapnext
+        lda #1
+        sta scrollon
+        lda #spr_ghost/64
+        sta SPRPTR
+        lda #spr_beam/64
+        sta SPRPTR+2
+        sta SPRPTR+3
+        lda #1                  ; white ghost, orange hunter, yellow beam
+        sta SPCOL
+        lda #8
+        sta SPCOL+1
+        lda #7
+        sta SPCOL+2
+        sta SPCOL+3
+        lda #$01                ; the ghost is doubled in both directions,
+        sta SPXEX               ; the two beam pieces in height
+        lda #$0d
+        sta SPYEX
+        lda #10
+        sta pxl
+        lda #221
+        sta VIC+3
+        lda #2
+        sta SPENA
+        lda #$5b
+        sta D011
+sc_loop jsr waitframe
+        inc sc_t
+        lda sc_ph               ; ---- skip? (not during the first half second)
+        bne sc_k1
+        lda sc_t
+        cmp #25
+        bcc sc_k3
+sc_k1   lda JOY
+        and #$10
+        beq sc_skip
+        lda KEYPRESS
+        cmp #64
+        bne sc_skip
+sc_k3   lda sc_t                ; ---- caption: starts 5 frames into phases 0-4
+        cmp #5
+        bne sc_k4
+        lda sc_ph
+        cmp #5
+        bcs sc_k4
+        jsr sc_capstart
+sc_k4   lda sc_t                ; typewriter: a letter every 2 frames
+        and #1
+        bne sc_k5
+        jsr sc_type
+sc_k5   jsr sc_phase
+        jsr scrollsky
+        lda sc_gxl              ; sprite positions
+        sta VIC
+        lda sc_gxh
+        sta MSBX
+        lda sc_gy
+        sta VIC+1
+        lda pxl
+        sta VIC+2
+        sta VIC+4
+        sta VIC+6
+        lda #179
+        sta VIC+5
+        lda #137
+        sta VIC+7
+        jsr splits
+        ldx sc_ph               ; next phase?
+        lda sc_t
+        cmp scdur,x
+        bne sc_loop
+        lda #0
+        sta sc_t
+        inc sc_ph
+        lda sc_ph
+        cmp #6
+        beq sc_end
+        jmp sc_loop
+sc_end  jsr sc_cleanup
+        sec
+        rts
+sc_skip jsr sc_cleanup
+        jsr sidclr
+        lda #0
+        sta KEYBUF
+        clc
+        rts
+sc_cleanup
+        lda #0
+        sta SPENA
+        sta SPXEX
+        sta SPYEX
+        sta MSBX
+        sta scrollon
+        sta fon
+        jsr ecmoff
+        lda #$0b
+        sta D011
+        rts
+
+sc_capstart                     ; clear the caption row, caption number = phase
+        lda sc_ph
+        sta sc_cap
+        lda #0
+        sta sc_ci
+        ldx #39
+        lda #$20
+sc_cs1  sta SCREEN+4*40,x
+        dex
+        bpl sc_cs1
+        ldx #39
+        lda #1
+sc_cs2  sta COLORRAM+4*40,x
+        dex
+        bpl sc_cs2
+        rts
+
+sc_type                         ; next letter of the caption
+        lda sc_ci
+        cmp #40
+        bcs sc_ty9
+        lda sc_cap
+        asl
+        asl
+        asl
+        sta PTR                 ; cap * 40 = cap*32 + cap*8
+        lda sc_cap
+        asl
+        asl
+        asl
+        asl
+        asl
+        clc
+        adc PTR
+        clc
+        adc sc_ci               ; + letter
+        tax
+        lda sc_txt,x
+        and #$3f
+        ldx sc_ci
+        sta SCREEN+4*40,x
+        inc sc_ci
+sc_ty9  rts
+
+sc_phase                        ; what happens in each phase
+        ldx sc_ph
+        cpx #1
+        bcs sc_p1
+        lda pxl                 ; phase 0: the hunter walks in from the left
+        clc
+        adc #1
+        sta pxl
+        jmp sc_walk
+sc_p1   bne sc_p2
+        lda #3                  ; phase 1: the ghost glides in from the right
+        sta SPENA
+        lda sc_t
+        asl
+        sta PTR                 ; 2 pixels per frame
+        lda #<368
+        sec
+        sbc PTR
+        sta sc_gxl
+        lda #>368
+        sbc #0
+        sta sc_gxh
+        jsr sc_bobgy
+        jmp sc_walk
+sc_p2   cpx #2
+        bne sc_p3
+        lda #0                  ; phase 2: city stops, the ghost hovers
+        sta scrollon
+        lda #148
+        sta sc_gxl
+        lda #0
+        sta sc_gxh
+        jsr sc_bobgy
+        lda #spr_player/64
+        sta SPRPTR+1
+        rts
+sc_p3   cpx #3
+        bne sc_p4
+        lda #$0f                ; phase 3: beam on, the ghost shakes
+        sta SPENA
+        lda #1
+        sta fon
+        lda #spr_hsh/64
+        sta SPRPTR+1
+        lda sc_t
+        and #3
+        clc
+        adc #146
+        sta sc_gxl
+        lda #95
+        sta sc_gy
+        lda sc_t                ; flashing beam and ghost
+        and #2
+        beq sc_p3a
+        lda #7
+        bne sc_p3b
+sc_p3a  lda #1
+sc_p3b  sta SPCOL+2
+        sta SPCOL+3
+        lda sc_t
+        and #4
+        beq sc_p3c
+        lda #10
+        bne sc_p3d
+sc_p3c  lda #1
+sc_p3d  sta SPCOL
+        rts
+sc_p4   cpx #4
+        bne sc_p5
+        lda #0                  ; phase 4: the ghost flees up and away
+        sta fon
+        lda sc_t
+        cmp #2
+        bne sc_p4a
+        lda #3
+        sta SPENA
+sc_p4a  lda #spr_player/64
+        sta SPRPTR+1
+        lda #1
+        sta SPCOL
+        lda sc_gxl
+        clc
+        adc #4
+        sta sc_gxl
+        bcc sc_p4b
+        inc sc_gxh
+sc_p4b  lda sc_gy
+        sec
+        sbc #3
+        sta sc_gy
+        cmp #50
+        bcs sc_p4c
+        lda #2
+        sta SPENA
+sc_p4c  rts
+sc_p5   lda #spr_player/64      ; phase 5: the hunter stands proud
+        sta SPRPTR+1
+        rts
+
+sc_walk lda sc_t                ; walking legs: change every 4 frames
+        and #4
+        beq sc_w1
+        lda #spr_hw2/64
+        bne sc_w2
+sc_w1   lda #spr_hw1/64
+sc_w2   sta SPRPTR+1
+        rts
+
+sc_bobgy                        ; ghost height = 95 + bobbing
+        lda sc_t
+        lsr
+        and #15
+        tax
+        lda sc_bob,x
+        clc
+        adc #95
+        sta sc_gy
         rts

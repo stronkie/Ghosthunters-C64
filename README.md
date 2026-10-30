@@ -2,7 +2,7 @@
 
 A ghost-hunting game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-All releases, v1.0 to v1.6, are tested and working on a real Commodore 64 (PAL).
+Releases v1.0 to v1.6 are tested and working on a real Commodore 64 (PAL). v1.7 is emulator-tested only so far.
 
 ## Download and run
 
@@ -57,10 +57,11 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Features
 
-- Intro screen with a bitmap logo, title screen, demo mode (starts after 3 minutes idle), credits and a story intro with a flight to New York.
+- Intro screen with a bitmap logo, an animated opening scene (hunter walks in, ghost appears, hunter blasts it), title screen, demo mode (starts after 3 minutes idle), credits and a story intro with a flight to New York.
 - Ghostbusters-style tune on the menus, played by a raster interrupt; riff, beam and sound effects in the game.
 - Sound effects: ghost catch jingle, hurt wail, GO!, boss warning siren, low-power beep, boss-caught fanfare.
 - Smooth scrolling New York skyline in extended colour text mode with a RAM character set, plus a slower far city behind it (parallax, done with raster splits).
+- Animated hunter: standing, walking and shooting frames.
 - Cutscenes: car arrival, boss approach (the boss grows from far away), boss caught, driving away.
 - Top 10 Hall of Fame saved to disk, with the place reached and a star for players who finished the game.
 - Test cheat: type `GHOST` in the main menu for unlimited lives and a full power bar (`N` skips a level). No Hall of Fame entry on game over while it is active.
@@ -75,7 +76,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-Each release is kept in its own folder (`v1.0` to `v1.6`), and earlier development snapshots are in `previous-versions/`.
+Each release is kept in its own folder (`v1.0` to `v1.7`), and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -86,6 +87,7 @@ Each release is kept in its own folder (`v1.0` to `v1.6`), and earlier developme
 | v1.4 | Sound effects (real C64 OK) |
 | v1.5 | Unique boss per New York place, cleaned-up source (real C64 OK) |
 | v1.6 | Parallax skyline: a slow far city behind the near buildings (real C64 OK) |
+| v1.7 | Animated hunter (walk and shoot frames), animated intro scene |
 
 ## Credits
 
