@@ -6,4 +6,4 @@ Same game as 1.1, but with a new memory layout:
 - Free space is now about 2.8 KB below $A000 plus about 5 KB above it (it was about 220 bytes).
 - RUN/STOP switches BASIC back on before returning to BASIC; BASIC then sees only the SYS line.
 
-Because this changes how the machine is set up, please test on a real C64 / Ultimate. If anything misbehaves, version 1.1 is the fallback.
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.

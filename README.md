@@ -2,7 +2,7 @@
 
 A ghost-hunting game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-Tested and working on a real Commodore 64 (PAL).
+Releases v1.0 to v1.4 are all tested and working on a real Commodore 64 (PAL). v1.5 is emulator-tested only so far.
 
 ## Download and run
 
@@ -70,7 +70,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 - Pure 6502 assembly, built with a small custom Python assembler, packed with a custom LZ packer into a self-extracting PRG.
 - BASIC is switched off while the game runs (`$01 = $36`), which frees RAM under the BASIC ROM at `$A000` for cutscene code, sound effects and the places of New York.
 - Memory map: sprites and variables low (`$0801-$0FFF`), tune at `$1000`, map and charset in VIC bank 0 up to `$3FFF`, data from `$4000`, main code below `$A000`.
-- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware.
+- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware (v1.0 to v1.4).
 - The Hall of Fame file `HIGHSCORE` is a 120-byte SEQ file; old 110-byte files are converted automatically.
 
 ## Versions
@@ -79,11 +79,11 @@ Each release is kept in its own folder (`v1.0` to `v1.5`), and earlier developme
 
 | Version | Highlights |
 |---|---|
-| v1.0 | First complete game |
-| v1.1 | Per-place themes, place name on the HUD, "NEXT STOP" screen, low-power beep, boss fanfare |
-| v1.2 | More free memory (BASIC off, code under BASIC) |
-| v1.3 | Better Hall of Fame (place reached, star for winners) |
-| v1.4 | Sound effects |
+| v1.0 | First complete game (real C64 OK) |
+| v1.1 | Per-place themes, place name on the HUD, "NEXT STOP" screen, low-power beep, boss fanfare (real C64 OK) |
+| v1.2 | More free memory (BASIC off, code under BASIC) (real C64 OK) |
+| v1.3 | Better Hall of Fame (place reached, star for winners) (real C64 OK) |
+| v1.4 | Sound effects (real C64 OK) |
 | v1.5 | Unique boss per New York place, cleaned-up source |
 
 ## Credits

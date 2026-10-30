@@ -5,4 +5,4 @@ Changes since 1.0:
 - **Place name** shown on the second row during a level, and "NEXT STOP: <place>" on the level complete screen.
 - **Sound effects:** low-power warning beep while firing, and a rising fanfare when the boss is caught.
 
-Built and regression-tested in a custom 6502 emulator. Version 1.0 was confirmed on a real C64; 1.1 still needs a real-hardware check.
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.
