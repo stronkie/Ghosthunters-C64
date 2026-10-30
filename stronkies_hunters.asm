@@ -21,7 +21,9 @@ STORYN = 35
 ;  SID:      menus = 3 voice Ghostbusters tune (raster IRQ at line 253),
 ;            game  = riff on voice 1, beam on voice 2, noise/effects on 3
 ;  Screen:   scrolling New York skyline in extended colour text mode,
-;            RAM character set at $3800, fine scroll below raster 178
+;            RAM character set at $3800.  Parallax: a slow far city (rows
+;            13-14, own fine scroll) behind the near skyline (rows 15-23);
+;            raster splits at lines 154, 166, 238 and 242 (see bodyend)
 ;  Disk:     HIGHSCORE SEQ file (120 bytes) holds the Top 10
 ;  Tuned for PAL (50 Hz) machines.
 ;
@@ -812,6 +814,10 @@ demo    .byte 0
 dmtl    .byte 0
 dmth    .byte 0
 fine    .byte 0
+ffine   .byte 0                 ; far skyline: fine scroll 7..0
+fpar    .byte 0                 ; far skyline moves every 3rd frame
+farnext .byte 0                 ; next column of farmap
+hazecol .byte 0                 ; colour of the far city (haze behind the near buildings)
 mapnext .byte 0
 idlel   .byte 0
 idleh   .byte 0
@@ -1036,10 +1042,10 @@ stunstr
         .text "STAND UNDER IT - PRESS UP OR T"
         .byte 0
 capstr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
         .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
         .text "BOSS CAPTURED!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d
         .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$99
         .text "LEVEL COMPLETE!  +100"
         .byte 0
@@ -1048,9 +1054,9 @@ blank12
         .text "                                        "
         .byte 0
 blank1214
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
         .text "                                        "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
         .text "                                        "
         .byte 0
 blank34
@@ -3675,10 +3681,20 @@ nomus
         bne gcont
         jmp gameover
 gcont
-bodyend jsr waitsky             ; wait for raster 170 (top of the skyline)
-        lda fine                ; fine scroll for the skyline rows only
+bodyend jsr waitfar             ; raster 154: far skyline rows get their own fine scroll
+        lda ffine
         ora #$c0
         sta D016
+        jsr waitsky             ; raster 166 (solid row 14): near skyline scroll + haze colour
+        lda fine
+        ora #$c0
+        sta D016
+        lda hazecol
+        sta BGCOL
+        jsr waitstr             ; raster 238 (street row): sky colour back
+        ldx nm_cur
+        lda th_sky,x
+        sta BGCOL
         jsr waitbot             ; raster 242: the bottom bezel must not scroll
         lda #$c0
         sta D016
@@ -4029,7 +4045,8 @@ stl2    lda needtab,x
         jsr showlvl
         jsr showprog
         jsr showplace           ; name of the place on the second row
-        jsr settheme            ; colours + boss pattern of this place
+        jsr settheme            ; colours of this place
+        jsr farinit             ; far skyline
         lda #1
         sta mtimer
         sta gmode               ; 1 = car arrives, hunter gets out, countdown
@@ -5148,7 +5165,18 @@ ds2     rts
 scrollsky
         lda scrollon
         beq ssdone
-        dec fine
+        inc fpar                ; the far skyline moves at a third of the speed
+        lda fpar
+        cmp #3
+        bcc ss1
+        lda #0
+        sta fpar
+        dec ffine
+        bpl ss1
+        lda #7
+        sta ffine
+        jsr shiftfar
+ss1     dec fine
         bpl ssdone
         lda #7
         sta fine
@@ -5249,8 +5277,70 @@ sh2     ldy mapnext             ; bring in the next skyline column
         sta mapnext
         rts
 
-waitsky lda RASTER              ; wait until raster line 170
-        cmp #170
+; ---------------------------------------------------------------------
+;  FAR SKYLINE (parallax): a slow, dark second city behind the near one.
+;  Row 14 is a solid band of colour hazecol, row 13 holds the roof shapes
+;  (farmap).  Raster splits: the far rows get their own fine scroll, and
+;  from the middle of row 14 the background colour becomes hazecol, so
+;  the gaps between the near buildings show the far city (bodyend).
+; ---------------------------------------------------------------------
+FAR13       = SCREEN+13*40
+FAR14       = SCREEN+14*40
+farinit
+        ldx nm_cur
+        lda th_far,x
+        sta hazecol
+        lda #7
+        sta ffine
+        lda #0
+        sta fpar
+        lda #40
+        sta farnext
+        ldx #0
+fi1     lda farmap,x
+        sta FAR13,x
+        lda #38
+        sta FAR14,x
+        lda hazecol
+        sta COLORRAM+13*40,x
+        sta COLORRAM+14*40,x
+        inx
+        cpx #40
+        bne fi1
+        rts
+
+shiftfar
+        ldx #0
+sf1     lda FAR13+1,x
+        sta FAR13,x
+        inx
+        cpx #39
+        bne sf1
+        ldy farnext
+        lda farmap,y
+        sta FAR13+39
+        iny
+        tya
+        and #63
+        sta farnext
+        rts
+
+waitfar lda RASTER              ; still in the lower half of the previous frame? wait for the wrap
+        cmp #154
+        bcs waitfar
+wf1     lda RASTER              ; wait until raster line 154 (last line of row 12)
+        cmp #154
+        bcc wf1
+        rts
+
+waitstr lda RASTER              ; wait until raster line 238 (street row)
+        cmp #238
+        bcc waitstr
+        rts
+
+
+waitsky lda RASTER              ; wait until raster line 166 (inside the solid row 14)
+        cmp #166
         bcc waitsky
         rts
 
@@ -8707,6 +8797,12 @@ fanfare                         ; long rising glide when the boss is caught
         rts
 
 
+th_far  .byte 6,2,0,12,6      ; far city / haze colour per place
+farmap
+        .byte 32,32,38,38,63,38,32,32,32,34,38,35,32,32,32,34
+        .byte 38,38,38,35,32,34,38,35,32,32,32,34,38,38,38,38
+        .byte 35,32,32,32,34,38,38,35,32,32,32,31,32,34,38,38
+        .byte 38,35,32,31,32,34,38,35,32,32,34,38,38,38,32,32
 bs_ptr  .byte spr_boss/64,spr_boss_ny/64,spr_boss_hb/64,spr_boss_jf/64,spr_boss_st/64
 bs_int  .byte 34,30,33,26,22     ; boss attack interval (frames), per place: lower = nastier
 ; boss attack patterns (0 homing  1 spread  2 sniper  3 pincer), 8 steps per place
