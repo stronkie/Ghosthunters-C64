@@ -16,4 +16,4 @@ A Commodore 64 ghost-hunting game in 6502 assembly. Hunt ghosts and bosses acros
 On the main menu type `G H O S T` (border flashes). Unlimited lives, full power bar, `N` skips a level, no Hall of Fame entry on game over (a win still counts). Type it again to switch off.
 
 ## Status
-Tested only in a custom 6502 emulator, not yet on real hardware / VICE.
+Tested on an Ultimste c64  / VICE.
