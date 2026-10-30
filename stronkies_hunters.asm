@@ -1,4 +1,4 @@
-CODEORG = $78b0
+CODEORG = $78f0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S HUNTERS  -  Commodore 64 machine language game
@@ -63,7 +63,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$30,$38,$39,$36,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$30,$39,$36,$30,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -1068,6 +1068,8 @@ hsl_tab
         .byte $00,$50,$00,$50,$00,$50,$00,$80,$50,$30
 hlv_tab
         .byte 2,2,1,1,1,1,1,1,1,1
+hpl_tab                         ; place reached (1-5, 0 = unknown) + bit 7 = completed the game
+        .byte 0,0,0,0,0,0,0,0,0,0
 names
         .text "STRONKIE"
         .text "SPOOKY  "
@@ -1808,7 +1810,7 @@ CHRIN       = $ffcf
 READST      = $ffb7
 STATUS      = $90
 DEVNUM      = $ba
-HSLEN       = 110
+HSLEN       = 120
 
 hsdev   ldx DEVNUM              ; drive we were loaded from (default 8); keeps A
         cpx #8
@@ -1848,19 +1850,35 @@ hsl1    jsr CHRIN
         cmp #HSLEN
         beq hsl2
         lda hsst                ; any status before the last byte = bad file
-        bne hslfail
+        bne hsl6
         jmp hsl1
+hsl6    cmp #$40                ; end of file after 110 bytes = a file of the older version
+        bne hslfail
+        lda hsi
+        cmp #110
+        bne hslfail
+        ldy #79                 ; names move up by 10, the new place column starts empty
+hsl7    lda hsbuf+30,y
+        sta hsbuf+40,y
+        dey
+        bpl hsl7
+        ldy #9
+        lda #0
+hsl8    sta hsbuf+30,y
+        dey
+        bpl hsl8
+        jmp hsl5
 hsl2    lda hsst
         and #$bf                ; end-of-file is fine on the last byte
         bne hslfail
-        ldy #HSLEN-1            ; sanity: the 80 name bytes must be $20-$5f
+hsl5    ldy #HSLEN-1            ; sanity: the 80 name bytes must be $20-$5f
 hsl4    lda hsbuf,y
         cmp #$20
         bcc hslfail
         cmp #$60
         bcs hslfail
         dey
-        cpy #30
+        cpy #40
         bcs hsl4
         ldy #HSLEN-1            ; good file: use it
 hsl3    lda hsbuf,y
@@ -1937,6 +1955,7 @@ hsi     .byte 0
 hsst    .byte 0
 hsfail  .byte 0
 hsbuf
+        .byte 0,0,0,0,0,0,0,0,0,0
         .byte 0,0,0,0,0,0,0,0,0,0
         .byte 0,0,0,0,0,0,0,0,0,0
         .byte 0,0,0,0,0,0,0,0,0,0
@@ -2403,7 +2422,7 @@ dpbuf   .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 ; ---------------------------------------------------------------------
 ;  R in the menu: all high scores back to the starting table + save
 ; ---------------------------------------------------------------------
-hsreset ldx #109
+hsreset ldx #119
 hr1     lda hsdef,x
         sta hsh_tab,x
         dex
@@ -2425,12 +2444,13 @@ chimeon .byte 0
 chf     .byte 0
 hsdef
         .byte 6,4,3,2,2,1,1,0,0,0,0,80,0,80,0,80
-        .byte 0,128,80,48,2,2,1,1,1,1,1,1,1,1,83,84
-        .byte 82,79,78,75,73,69,83,80,79,79,75,89,32,32,80,72
-        .byte 65,78,84,79,77,32,87,73,83,80,89,32,32,32,83,72
-        .byte 65,68,79,87,32,32,71,76,79,79,77,89,32,32,83,80
-        .byte 69,67,84,82,69,32,66,79,79,66,79,79,32,32,72,65
-        .byte 85,78,84,69,82,32,70,76,79,65,84,89,32,32
+        .byte 0,128,80,48,2,2,1,1,1,1,1,1,1,1,0,0
+        .byte 0,0,0,0,0,0,0,0,83,84,82,79,78,75,73,69
+        .byte 83,80,79,79,75,89,32,32,80,72,65,78,84,79,77,32
+        .byte 87,73,83,80,89,32,32,32,83,72,65,68,79,87,32,32
+        .byte 71,76,79,79,77,89,32,32,83,80,69,67,84,82,69,32
+        .byte 66,79,79,66,79,79,32,32,72,65,85,78,84,69,82,32
+        .byte 70,76,79,65,84,89,32,32
 istrip
         .byte 0,24,52,32,96,44,52,28,0,44,44,44,60,44,44,44
         .byte 0,56,44,100,100,100,44,56,0,56,36,32,56,12,12,56
@@ -3097,11 +3117,59 @@ dh1     ldx ri
         ldx ri
         lda hlv_tab,x
         jsr put2bin             ; level reached
+        jsr hallplace
         inc ri
         lda ri
         cmp #10
         bne dh1
         rts
+
+hallplace                       ; place reached (3 letters) and a star when the game was completed
+        ldx ri
+        lda hpl_tab,x
+        beq hp9
+        pha
+        lda PTR
+        clc
+        adc #3
+        sta PTR
+        sta PTR2
+        lda PTR+1
+        adc #0
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        pla
+        pha
+        and #7
+        sec
+        sbc #1
+        sta hp_t
+        asl
+        clc
+        adc hp_t
+        tax
+        ldy #0
+hp1     lda plc_txt,x
+        and #$3f
+        sta (PTR),y
+        lda #15
+        sta (PTR2),y
+        inx
+        iny
+        cpy #3
+        bne hp1
+        pla
+        bpl hp9
+        ldy #4
+        lda #42
+        sta (PTR),y
+        lda #7
+        sta (PTR2),y
+hp9     rts
+hp_t    .byte 0
+plc_txt .text "HARMANHBRJFKLIB"
 
 hallblink                       ; highlight the new entry
         lda hlrow
@@ -3157,6 +3225,7 @@ newgame lda #0
         sta dbt
         sta gmode
         sta nm_clr              ; New York: nothing cleared yet
+        sta won
         lda #3
         sta nm_cur              ; the plane landed at JFK
         sta lives
@@ -4520,6 +4589,8 @@ is1     cpx rank
         sta hsl_tab,x
         lda hlv_tab-1,x
         sta hlv_tab,x
+        lda hpl_tab-1,x
+        sta hpl_tab,x
         txa
         pha
         asl
@@ -4543,6 +4614,13 @@ is3     lda sch
         sta hsl_tab,x
         lda lvl
         sta hlv_tab,x
+        lda nm_cur              ; place where it ended (+1), bit 7 = won the game
+        clc
+        adc #1
+        ldy won
+        beq is5
+        ora #$80
+is5     sta hpl_tab,x
         txa
         asl
         asl
@@ -6728,6 +6806,7 @@ sprreset                        ; all sprites back to their game set-up
         rts
 
         * = $0d00               ; free RAM: New York progress + victory screen
+won     .byte 0                 ; 1 = the game was completed (for the Hall of Fame)
 nm_clr  .byte 0                 ; bit per place: 1 Harlem, 2 Manhattan, 4 Harbor, 8 JFK, 16 Statue
 nm_bt   .byte 0
 nm_bc   .byte 0
@@ -6765,7 +6844,9 @@ nb_n    dex
         bpl nb_l
         rts
 
-winscr  lda #0                  ; all four places cleared: you have won
+winscr  lda #1                  ; all four places cleared: you have won
+        sta won
+        lda #0
         sta SPENA
         sta MSBX
         jsr ecmoff
@@ -7184,7 +7265,7 @@ wb9     jsr hmclr
         ldx scl
         jmp put4
 
-        * = $0ec6               ; free RAM: places of New York, sound effects
+        * = $0ee0               ; free RAM: places of New York, sound effects
 th_sky  .byte 0,0,6,0,0         ; per place: Harlem, Manhattan, Harbor, JFK, Statue
 th_b1   .byte 2,4,14,6,5
 th_b3   .byte 8,15,3,9,7
