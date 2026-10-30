@@ -2043,6 +2043,7 @@ bmg1    lda CHARSET+160*8,x     ; as a solid block for the letters
         lda #0
         sta bmf
 bmw     jsr waitframe
+        jsr fxtick
         inc bmf
         lda bmf
         and #7
@@ -3672,6 +3673,7 @@ nzc     dec zap
         lda #$80
         sta SID+18
 nozap
+        jsr fxtick              ; sound effects (game)
         lda flash               ; colour flash after hitting the ghost
         beq noflash
         dec flash
@@ -3747,6 +3749,8 @@ gothit  lda #$10
         sta chimeon
         lda #8
         sta zap
+        lda #0                  ; ghost caught: little jingle
+        jsr fxstart
         lda #12
         sta flash
         lda OSC3
@@ -3786,6 +3790,8 @@ hu_c
         lda #20
         sta zap
         jsr resettimer
+        lda #1                  ; hurt: falling wail
+        jsr fxstart
         jsr bigmsg              ; "HE SLIMED ME" + 4 second pause
         rts
 
@@ -4015,6 +4021,7 @@ stl1    lda #$0c
         sta tph
         sta flash
         sta zap
+        sta fxon
         sta ht
         sta gph
         sta gcnt
@@ -7458,7 +7465,8 @@ brake   lda #$00                ; tyre squeal
         sta zap
         rts
 
-zaptick lda zap
+zaptick jsr fxtick             ; sound effects (cutscenes)
+        lda zap
         beq zt1
         dec zap
         bne zt1
@@ -7613,6 +7621,8 @@ cd3     cmp #150
         jsr bigshow
         lda #8
         jsr beep
+        lda #2                  ; GO!
+        jsr fxstart
         jmp cd9
 cd4     cmp #190
         bne cd9
@@ -7744,6 +7754,8 @@ approachseq
         lda #>appstr
         sta PTR+1
         jsr printstr
+        lda #3                  ; boss warning siren
+        jsr fxstart
 ap_a    ldx gph
         lda gcnt
         cmp apdur,x
@@ -8514,3 +8526,109 @@ gt2     lda pbn                 ; "POWER UP!" banner
         jsr showmsg
 gt3     rts
 
+; ---------------------------------------------------------------------
+;  SOUND EFFECTS: short note lists (frames, freq lo, freq hi, control)
+;  played on voice 3 (game) or voice 2 (cutscenes), one note per step.
+;  0 caught a ghost   1 hunter hurt   2 GO!   3 boss warning
+; ---------------------------------------------------------------------
+fx_idx  .byte 0,17,50,67
+fx_vc   .byte 14,14,7,0          ; voice offset: 14 = voice 3, 7 = voice 2, 0 = voice 1
+fxdat
+        .byte 2,$00,$06,$81     ; 0: thump, then rising ding
+        .byte 3,$dc,$2b,$11
+        .byte 3,$26,$34,$11
+        .byte 7,$9d,$45,$11
+        .byte 0
+        .byte 3,$e9,$27,$21     ; 1: falling wail
+        .byte 3,$42,$21,$21
+        .byte 3,$f0,$1b,$21
+        .byte 3,$48,$17,$21
+        .byte 3,$4a,$13,$21
+        .byte 3,$f7,$0f,$21
+        .byte 3,$4e,$0d,$21
+        .byte 6,$00,$04,$81     ; rumble to finish
+        .byte 0
+        .byte 3,$cf,$22,$41     ; 2: GO! arpeggio
+        .byte 3,$dc,$2b,$41
+        .byte 3,$26,$34,$41
+        .byte 10,$9d,$45,$41
+        .byte 0
+        .byte 5,$89,$3a,$41     ; 3: siren, six times
+        .byte 5,$dc,$2b,$41
+        .byte 5,$89,$3a,$41
+        .byte 5,$dc,$2b,$41
+        .byte 5,$89,$3a,$41
+        .byte 5,$dc,$2b,$41
+        .byte 5,$89,$3a,$41
+        .byte 5,$dc,$2b,$41
+        .byte 0
+fxi     .byte 0
+fxv     .byte 0
+fxt     .byte 0
+fxon    .byte 0
+
+fxstart                         ; A = effect number
+        tax
+        lda fx_idx,x
+        sta fxi
+        lda fx_vc,x
+        sta fxv
+        cmp #14
+        bne fxs2
+        lda #0                  ; voice 3: cancel the old noise burst / chime, full volume notes
+        sta zap
+        sta chimeon
+        sta SID+19
+        lda #$f0
+        sta SID+20
+        jmp fxs3
+fxs2    tax                     ; voice 1 / 2: pulse width 50%
+        lda #0
+        sta SID+2,x
+        lda #8
+        sta SID+3,x
+fxs3    lda #0
+        sta fxt
+        lda #1
+        sta fxon
+        jmp fxtick
+
+fxtick  lda fxon
+        beq fxr
+        lda fxt
+        beq fx1
+        dec fxt
+fxr     rts
+fx1     ldx fxi
+        lda fxdat,x
+        beq fxend
+        sta fxt
+        dec fxt
+        ldy fxv
+        lda fxdat+1,x
+        sta SID,y
+        lda fxdat+2,x
+        sta SID+1,y
+        lda fxdat+3,x
+        sta SID+4,y
+        inx
+        inx
+        inx
+        inx
+        stx fxi
+        rts
+fxend   lda #0
+        sta fxon
+        lda fxv
+        cmp #14
+        bne fxe2
+        lda #$80                ; voice 3 back to the game's noise generator
+        sta SID+18
+        lda #$09
+        sta SID+19
+        sta SID+20
+        rts
+fxe2    tax                     ; voice 1 / 2 off again
+        lda #$20
+        sta SID+4,x
+        rts
