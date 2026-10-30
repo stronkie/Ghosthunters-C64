@@ -3991,1163 +3991,6 @@ stl2    lda needtab,x
         rts
 
 ; ---------------------------------------------------------------------
-;  CUTSCENES  (gmode 1 = arrival, 2 = boss approaching, 3 = leaving, 4 = level complete)
-; ---------------------------------------------------------------------
-cinematic
-        lda gmode
-        cmp #1
-        bne ci2
-        jmp introseq
-ci2     cmp #2
-        bne ci3
-        jmp approachseq
-ci3     cmp #3
-        bne ci4
-        jmp outroseq
-ci4     jmp lcseq
-
-cinplace                        ; put hunter, car and boss on the screen
-        lda pxl
-        sta VIC+2
-        lda #221
-        sta VIC+3
-        lda carxl
-        sta VIC+12
-        sta VIC+14
-        lda #221
-        sta VIC+13
-        sta VIC+15
-        lda bxl
-        sta VIC+10
-        lda byv
-        sta VIC+11
-        lda #0
-        ldx pxh
-        beq cp1
-        ora #$02
-cp1     ldx carxh
-        beq cp2
-        ora #$c0
-cp2     ldx bxh
-        beq cp3
-        ora #$20
-cp3     sta MSBX
-        lda cmask
-        sta SPENA
-        rts
-
-carset                          ; car = two sprites (body red, glass + wheels cyan), doubled in X
-        lda cdir
-        bne cr1
-        lda #spr_car_ra/64
-        sta SPRPTR+6
-        lda #spr_car_rb/64
-        sta SPRPTR+7
-        jmp cr2
-cr1     lda #spr_car_la/64
-        sta SPRPTR+6
-        lda #spr_car_lb/64
-        sta SPRPTR+7
-cr2     lda #2
-        sta SPCOL+6
-        lda #3
-        sta SPCOL+7
-        lda SPXEX
-        ora #$c0
-        sta SPXEX
-        lda SPYEX
-        and #$3f
-        sta SPYEX
-        rts
-
-carunset
-        lda SPXEX
-        and #$3f
-        sta SPXEX
-        rts
-
-engine  inc ecnt                ; engine rumble
-        lda ecnt
-        and #3
-        asl
-        asl
-        asl
-        clc
-        adc #$40
-        sta SID+7
-        lda #3
-        sta SID+8
-        lda #$21
-        sta SID+11
-        rts
-
-brake   lda #$00                ; tyre squeal
-        sta SID+14
-        lda #$30
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #12
-        sta zap
-        rts
-
-zaptick lda zap
-        beq zt1
-        dec zap
-        bne zt1
-        lda #$80
-        sta SID+18
-zt1     rts
-
-thump   lda #$00                ; footstep
-        sta SID+14
-        lda #$06
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #5
-        sta zap
-        rts
-
-scream  lda #$00                ; scary shriek
-        sta SID
-        lda #$28
-        sta SID+1
-        lda #$21
-        sta SID+4
-        lda #22
-        sta bpt
-        rts
-
-beep    tay                     ; countdown beep, A = note index
-        lda freqlo,y
-        sta SID
-        lda freqhi,y
-        sta SID+1
-        lda #$21
-        sta SID+4
-        lda #14
-        sta bpt
-        rts
-
-; ---- arrival: car drives in, hunter gets out, car leaves, 3-2-1-GO
-introseq
-        lda gph
-        bne it1
-        jsr carset
-        lda #1
-        sta scrollon
-        clc
-        lda carxl
-        adc #3
-        sta carxl
-        lda carxh
-        adc #0
-        sta carxh
-        jsr engine
-        lda #$c0
-        sta cmask
-        lda carxl
-        cmp #70
-        bcc it_pl
-        lda #1
-        sta gph
-        lda #0
-        sta gcnt
-        sta scrollon
-        lda #$20
-        sta SID+11
-        jsr brake
-it_pl   jmp cinplace
-it1     cmp #1
-        bne it2
-        inc gcnt
-        lda gcnt
-        cmp #24
-        bcc it_pl
-        lda #2
-        sta gph
-        clc
-        lda carxl
-        adc #22
-        sta pxl
-        lda #0
-        sta pxh
-        lda #$c2
-        sta cmask
-        jmp cinplace
-it2     cmp #2
-        bne it3
-        clc
-        lda pxl
-        adc #2
-        sta pxl
-        cmp #160
-        bcc it_pl
-        lda #3
-        sta gph
-        lda #1
-        sta scrollon
-        jmp cinplace
-it3     cmp #3
-        bne it4
-        clc
-        lda carxl
-        adc #4
-        sta carxl
-        lda carxh
-        adc #0
-        sta carxh
-        jsr engine
-        lda carxh
-        beq it_pl
-        lda carxl
-        cmp #80
-        bcc it_pl
-        lda #4
-        sta gph
-        lda #0
-        sta gcnt
-        sta scrollon
-        lda #$02
-        sta cmask
-        lda #$20
-        sta SID+11
-        jsr carunset
-        jmp cinplace
-it4     jsr countdown
-        jmp cinplace
-
-countdown
-        lda gcnt
-        bne cd1
-        ldx #0
-        jsr bigshow
-        lda #5
-        jsr beep
-        jmp cd9
-cd1     cmp #50
-        bne cd2
-        ldx #1
-        jsr bigshow
-        lda #5
-        jsr beep
-        jmp cd9
-cd2     cmp #100
-        bne cd3
-        ldx #2
-        jsr bigshow
-        lda #5
-        jsr beep
-        jmp cd9
-cd3     cmp #150
-        bne cd4
-        ldx #3
-        jsr bigshow
-        lda #8
-        jsr beep
-        jmp cd9
-cd4     cmp #190
-        bne cd9
-        jsr bigclear
-        lda #0
-        sta gmode
-        lda #1
-        sta scrollon
-        sta mtimer
-        lda #$20
-        sta SID+4
-cd9     inc gcnt
-        lda bpt
-        beq cd10
-        dec bpt
-        bne cd10
-        lda #$20
-        sta SID+4
-cd10    rts
-
-bigshow stx tmpx                ; X = 0 "3", 1 "2", 2 "1", 3 "GO!"
-        jsr bigclear
-        ldx tmpx
-        cpx #3
-        bcs bs_go
-        txa
-        ldx #18
-        jmp drawglyph
-bs_go   lda #3
-        ldx #14
-        jsr drawglyph
-        lda #4
-        ldx #18
-        jsr drawglyph
-        lda #5
-        ldx #22
-        jmp drawglyph
-
-bigclear
-        ldx #14
-bk1     lda #32
-        sta SCREEN+8*40+12,x
-        sta SCREEN+9*40+12,x
-        sta SCREEN+10*40+12,x
-        sta SCREEN+11*40+12,x
-        sta SCREEN+12*40+12,x
-        lda #7
-        sta COLORRAM+8*40+12,x
-        sta COLORRAM+9*40+12,x
-        sta COLORRAM+10*40+12,x
-        sta COLORRAM+11*40+12,x
-        sta COLORRAM+12*40+12,x
-        dex
-        bpl bk1
-        rts
-
-drawglyph                       ; A = glyph 0-5, X = first column: 3x5 block letters
-        sta t1
-        asl
-        asl
-        clc
-        adc t1
-        sta gfi
-        stx tmpx
-        lda #<(SCREEN+8*40)
-        clc
-        adc tmpx
-        sta PTR
-        lda #>(SCREEN+8*40)
-        adc #0
-        sta PTR+1
-        lda #5
-        sta grow
-gl1     ldx gfi
-        lda bigfont,x
-        sta t2
-        ldy #0
-gl2     lda t2
-        and bmask,y
-        beq gl3
-        lda #38
-        sta (PTR),y
-gl3     iny
-        cpy #3
-        bne gl2
-        inc gfi
-        lda PTR
-        clc
-        adc #40
-        sta PTR
-        bcc gl4
-        inc PTR+1
-gl4     dec grow
-        bne gl1
-        rts
-
-; ---- boss approaching: the screen stops, footsteps and growls, the boss grows from far away
-startboss
-        lda #5
-        sta bstate
-        lda #2
-        sta gmode
-        lda #0
-        sta gph
-        sta gcnt
-        rts
-
-approachseq
-        lda gph
-        bne ap_a
-        lda gcnt
-        bne ap_a
-        lda #$02                ; only the hunter stays on the screen
-        sta cmask
-        lda #0
-        sta scrollon
-        lda SPXEX
-        and #$df
-        sta SPXEX
-        lda SPYEX
-        and #$df
-        sta SPYEX
-        lda #1
-        sta thc
-        lda #24
-        sta thint
-        lda #<appstr
-        sta PTR
-        lda #>appstr
-        sta PTR+1
-        jsr printstr
-ap_a    ldx gph
-        lda gcnt
-        cmp apdur,x
-        beq ap_nx
-        jmp ap_snd
-ap_nx   lda #0
-        sta gcnt
-        inc gph
-        lda gph
-        cmp #1
-        bne ap_e2
-        lda #spr_boss_s/64      ; stage 1: a tiny shape in the distance
-        sta SPRPTR+5
-        lda #172
-        sta bxl
-        lda #0
-        sta bxh
-        lda #106
-        sta byv
-        lda #$22
-        sta cmask
-        lda #1
-        sta SPCOL+5
-        lda #18
-        sta thint
-        jsr scream
-        jmp ap_snd
-ap_e2   cmp #2
-        bne ap_e3
-        lda #spr_boss/64        ; stage 2: closer
-        sta SPRPTR+5
-        lda #14
-        sta thint
-        jsr scream
-        jmp ap_snd
-ap_e3   cmp #3
-        bne ap_e4
-        lda SPXEX               ; stage 3: huge
-        ora #$20
-        sta SPXEX
-        lda SPYEX
-        ora #$20
-        sta SPYEX
-        lda #161
-        sta bxl
-        lda #95
-        sta byv
-        lda #10
-        sta thint
-        jsr scream
-        jmp ap_snd
-ap_e4   cmp #4
-        bne ap_e5
-        lda #<readystr
-        sta PTR
-        lda #>readystr
-        sta PTR+1
-        jsr printstr
-        lda #$20
-        sta SID+11
-        jmp ap_snd
-ap_e5   lda #<endapp            ; ready: the fight begins
-        sta PTR
-        lda #>endapp
-        sta PTR+1
-        jsr printstr
-        jsr beginfight
-        lda #0
-        sta gmode
-        lda #1
-        sta scrollon
-        sta mtimer
-        lda #15
-        sta SIDVOL
-        lda #$20
-        sta SID+4
-        sta SID+11
-        rts
-ap_snd  lda gph
-        cmp #4
-        bcs ap_x
-        dec thc
-        bne ap_g
-        lda thint
-        sta thc
-        jsr thump
-ap_g    lda gcnt
-        and #$3f
-        asl
-        sta SID+7
-        lda #2
-        sta SID+8
-        lda #$21
-        sta SID+11
-        lda gph                 ; volume swells with every stage
-        asl
-        clc
-        adc #8
-        sta SIDVOL
-ap_x    lda bpt
-        beq ap_y
-        dec bpt
-        bne ap_y
-        lda #$20
-        sta SID+4
-ap_y    inc gcnt
-        jmp cinplace
-apdur   .byte 120,60,60,60,70
-
-; ---- boss caught: the hunter gets into a car and drives away
-startoutro
-        jsr fanfare             ; boss caught: rising fanfare
-        lda #3
-        sta gmode
-        lda #0
-        sta gph
-        sta gcnt
-        sta scrollon
-        lda #$02
-        sta cmask
-        lda #<blank1214
-        sta PTR
-        lda #>blank1214
-        sta PTR+1
-        jmp printstr
-
-outroseq
-        lda gph
-        bne ot1
-        lda pxl                 ; hunter walks to the middle of the street
-        sta d1l
-        lda pxh
-        sta d1h
-        lda #160
-        sta d2l
-        lda #0
-        sta d2h
-        jsr absdiff
-        cmp #3
-        bcc ot0b
-        lda sgn
-        beq ot0r
-        sec
-        lda pxl
-        sbc #3
-        sta pxl
-        lda pxh
-        sbc #0
-        sta pxh
-        jmp ot_pl
-ot0r    clc
-        lda pxl
-        adc #3
-        sta pxl
-        jmp ot_pl
-ot0b    lda #160
-        sta pxl
-        lda #0
-        sta pxh
-        sta carxl
-        sta carxh
-        sta cdir
-        sta gcnt
-        lda #1
-        sta gph
-        jsr carset
-        lda #$c2
-        sta cmask
-ot_pl   jmp cinplace
-ot1     cmp #1
-        bne ot2
-        clc                     ; the car drives in from the left
-        lda carxl
-        adc #3
-        sta carxl
-        jsr engine
-        lda carxl
-        cmp #108
-        bcc ot_pl
-        lda #2
-        sta gph
-        lda #0
-        sta gcnt
-        lda #$20
-        sta SID+11
-        jsr brake
-        jmp ot_pl
-ot2     cmp #2
-        bne ot3
-        inc gcnt
-        lda gcnt
-        cmp #15
-        bcc ot_pl
-        cmp #25                 ; hunter walks into the car
-        bcs ot2b
-        sec
-        lda pxl
-        sbc #2
-        sta pxl
-        jmp ot_pl
-ot2b    lda #3
-        sta gph
-        lda #0
-        sta gcnt
-        lda #$c0                ; hunter is inside
-        sta cmask
-        jmp ot_pl
-ot3     inc gcnt
-        lda gcnt
-        cmp #20
-        bcc ot3p
-        lda #1
-        sta scrollon
-        clc
-        lda carxl
-        adc #4
-        sta carxl
-        lda carxh
-        adc #0
-        sta carxh
-        jsr engine
-        lda carxh
-        beq ot3p
-        lda carxl
-        cmp #80
-        bcc ot3p
-        lda #4                  ; car is gone: the level complete screen
-        sta gmode
-        lda #0
-        sta gph
-        sta gcnt
-        sta scrollon
-        lda #$20
-        sta SID+11
-        jmp carunset
-ot3p    jmp cinplace
-
-; ---- level complete screen: level, creatures busted, score; fire / space continues
-lcseq
-        lda gph
-        bne lc1
-        jsr nymap               ; the taxi drives through New York first
-        jsr levelscreen
-        lda #1
-        sta gph
-        lda #0
-        sta gcnt
-        rts
-lc1     lda gcnt
-        cmp #250
-        bcs lc1b
-        inc gcnt
-lc1b    lda gcnt
-        and #$20
-        beq lc_a
-        lda #11
-        jmp lc_b
-lc_a    lda #1
-lc_b    ldx #26
-lc_c    sta COLORRAM+20*40+9,x
-        dex
-        bpl lc_c
-        lda demo
-        beq lc2
-        lda gcnt
-        cmp #120
-        bcs lc_go
-        rts
-lc2     lda gcnt
-        cmp #30
-        bcc lc_x
-        lda inf
-        beq lc_x
-lc_go   lda lvl
-        cmp #99
-        bcs lc_nl
-        inc lvl
-lc_nl   jmp startlevel
-lc_x    rts
-
-levelscreen
-        jsr ecmoff
-        lda #0
-        sta BORDER
-        sta SPENA
-        sta MSBX
-        lda #$20
-        sta SID+4
-        sta SID+11
-        lda #$80
-        sta SID+18
-        jsr drawbg
-        lda #<lcstr
-        sta PTR
-        lda #>lcstr
-        sta PTR+1
-        jsr printstr
-        jsr shownext            ; where the taxi goes next
-        lda #<(SCREEN+4*40+17)  ; level just finished
-        sta PTR
-        lda #>(SCREEN+4*40+17)
-        sta PTR+1
-        lda lvl
-        jsr put2bin
-        lda #<(SCREEN+8*40+24)  ; creatures busted
-        sta PTR
-        lda #>(SCREEN+8*40+24)
-        sta PTR+1
-        lda gbh
-        ldx gbl
-        jsr put4
-        lda #<(SCREEN+10*40+24) ; score
-        sta PTR
-        lda #>(SCREEN+10*40+24)
-        sta PTR+1
-        lda sch
-        ldx scl
-        jsr put4
-        lda #<(SCREEN+12*40+24) ; high score
-        sta PTR
-        lda #>(SCREEN+12*40+24)
-        sta PTR+1
-        lda hsh_tab
-        ldx hsl_tab
-        jsr put4
-        lda #<(SCREEN+16*40+20) ; next level
-        sta PTR
-        lda #>(SCREEN+16*40+20)
-        sta PTR+1
-        lda lvl
-        clc
-        adc #1
-        jsr put2bin
-        ldx #0                  ; little fanfare
-lv_f    ldy fanotes,x
-        lda freqlo,y
-        sta SID
-        lda freqhi,y
-        sta SID+1
-        lda #$21
-        sta SID+4
-        ldy #10
-lv_w    jsr waitframe
-        dey
-        bne lv_w
-        inx
-        cpx #4
-        bne lv_f
-        lda #$20
-        sta SID+4
-        rts
-
-; ---- home screen 3: the power-ups explained, with the real icons
-ptrfix  lda #spr_ghost/64
-        sta SPRPTR
-        lda #spr_player/64
-        sta SPRPTR+1
-        lda #spr_beam/64
-        sta SPRPTR+2
-        sta SPRPTR+3
-        lda #5
-        sta SPCOL
-        lda #8
-        sta SPCOL+1
-        lda #7
-        sta SPCOL+2
-        sta SPCOL+3
-        rts
-
-showpinfo
-        jsr drawbg
-        lda #<pinfoscr
-        sta PTR
-        lda #>pinfoscr
-        sta PTR+1
-        jsr printstr
-        lda #spr_pwi/64
-        sta SPRPTR
-        lda #spr_pwe/64
-        sta SPRPTR+1
-        lda #spr_pwg/64
-        sta SPRPTR+2
-        lda #spr_pws/64
-        sta SPRPTR+3
-        ldx #0
-pn_l    txa
-        asl
-        tay
-        lda #40
-        sta VIC,y
-        lda pinfy,x
-        sta VIC+1,y
-        inx
-        cpx #4
-        bne pn_l
-        lda #0
-        sta MSBX
-        sta SPXEX
-        sta SPYEX
-        lda #$0f
-        sta SPENA
-        rts
-
-pinfoanim
-        inc ph
-        lda ph
-        lsr
-        lsr
-        and #1
-        tax
-        lda pwcol,x
-        sta SPCOL
-        lda pwcol+2,x
-        sta SPCOL+1
-        lda pwcol+4,x
-        sta SPCOL+2
-        lda pwcol+6,x
-        sta SPCOL+3
-        rts
-
-addscore                        ; A = BCD low, X = BCD high
-        sei
-        sed
-        clc
-        adc scl
-        sta scl
-        txa
-        adc sch
-        sta sch
-        cld
-        cli
-        rts
-
-beginfight
-        lda #spr_boss/64
-        sta SPRPTR+5
-        lda #1
-        sta bstate
-        lda #3
-        sta bhp
-        lda #0
-        sta binv
-        sta tph
-        sta bpat
-        sta p2act
-        lda #1
-        sta SPCOL+5
-        lda SPXEX               ; boss sprite is doubled in both directions
-        ora #$20
-        sta SPXEX
-        lda SPYEX
-        ora #$20
-        sta SPYEX
-        lda #40
-        sta stimer
-        lda #60
-        sta bncnt
-        lda #<bosshud
-        sta PTR
-        lda #>bosshud
-        sta PTR+1
-        jsr printstr
-        rts
-
-bossupdate
-        lda bstate
-        bne bu0
-        rts
-bu0     cmp #1
-        bne bu2
-        lda gxl                 ; state 1: the boss floats like the ghost
-        sec
-        sbc #12
-        sta bxl
-        lda gxh
-        sbc #0
-        sta bxh
-        lda gy
-        sec
-        sbc #10
-        sta byv
-        lda binv
-        beq bu1a
-        dec binv
-bu1a    lda fon
-        beq bu1x
-        lda binv
-        bne bu1x
-        lda col
-        and #$20                ; boss touched ...
-        beq bu1x
-        lda col
-        and #12                 ; ... by the beam
-        beq bu1x
-        jsr bosshit
-bu1x    rts
-bu2     cmp #2
-        bne bu3
-        lda byv                 ; state 2: stunned, sinks to height 150
-        cmp #150
-        bcs bu2a
-        clc
-        adc #2
-        sta byv
-bu2a    lda intrap
-        beq bu2x
-        lda tcool
-        bne bu2x
-        jsr trapdeploy
-bu2x    rts
-bu3     cmp #3
-        bne bu4
-        jmp trapsuck
-bu4     cmp #4
-        bne bu5
-        dec lcount
-        bne bu5
-        jmp startoutro
-bu5     rts
-
-bosshit dec bhp
-        lda #40
-        sta binv
-        lda #$50                ; +50 per boss hit
-        ldx #0
-        jsr addscore
-        jsr showscore
-        lda #90                 ; 35% chance the boss drops a power-up
-        jsr maybedrop
-        lda #$c8
-        sta SID+14
-        lda #$1e
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #10
-        sta zap
-        lda #12
-        sta flash
-        lda bhp
-        beq bh1
-        tax
-        lda bhpcol,x
-        sta SPCOL+5
-        jmp showboss
-bh1     lda #2                  ; third hit: stunned!
-        sta bstate
-        lda #0
-        sta pact
-        sta p2act
-        lda #2                  ; overcooked: red
-        sta SPCOL+5
-        lda #<stunstr
-        sta PTR
-        lda #>stunstr
-        sta PTR+1
-        jsr printstr
-        jmp showboss
-
-trapdeploy
-        clc
-        lda bxl
-        adc #12
-        sta d1l
-        lda bxh
-        adc #0
-        sta d1h
-        lda pxl
-        sta d2l
-        lda pxh
-        sta d2h
-        jsr absdiff
-        cmp #24                 ; hunter must stand under the boss
-        bcc td1
-        lda #30                 ; too far away: the trap fizzles
-        sta tcool
-        lda #$00
-        sta SID+14
-        lda #$03
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #6
-        sta zap
-        rts
-td1     lda pxh                 ; trap lands right next to the hunter
-        bne td2
-        lda pxl
-        cmp #232
-        bcs td2
-        clc
-        adc #24
-        sta txl
-        lda #0
-        sta txh
-        jmp td3
-td2     sec
-        lda pxl
-        sbc #24
-        sta txl
-        lda pxh
-        sbc #0
-        sta txh
-td3     lda #3
-        sta bstate
-        lda #0
-        sta ppact               ; sprite 6 is the trap now
-        sta p2act               ; sprite 7 becomes the suction ray
-        sta tph
-        lda SPYEX               ; ray is double height
-        ora #$80
-        sta SPYEX
-        lda #spr_trapc/64
-        sta SPRPTR+6
-        lda #<blank34
-        sta PTR
-        lda #>blank34
-        sta PTR+1
-        jsr printstr
-        lda #$c8                ; clunk
-        sta SID+14
-        lda #$04
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #5
-        sta zap
-        rts
-
-trapsuck
-        inc tph
-        lda tph
-        cmp #15
-        bcs ts1
-        rts                     ; trap still closed
-ts1     lda #spr_trapo/64       ; trap opens, ray shines
-        sta SPRPTR+6
-        lda #0                  ; rising suction sound on voice 2
-        sta SID+7
-        lda tph
-        lsr
-        lsr
-        lsr
-        clc
-        adc #4
-        sta SID+8
-        lda #$21
-        sta SID+11
-        lda SPXEX               ; X the boss is pulled toward
-        and #$20
-        beq ts2
-        sec
-        lda txl
-        sbc #12
-        sta d1l
-        lda txh
-        sbc #0
-        sta d1h
-        jmp ts3
-ts2     lda txl
-        sta d1l
-        lda txh
-        sta d1h
-ts3     lda bxl
-        sta d2l
-        lda bxh
-        sta d2h
-        jsr absdiff
-        cmp #3
-        bcc ts5
-        lda sgn
-        beq ts4
-        clc
-        lda bxl
-        adc #2
-        sta bxl
-        lda bxh
-        adc #0
-        sta bxh
-        jmp ts5
-ts4     sec
-        lda bxl
-        sbc #2
-        sta bxl
-        lda bxh
-        sbc #0
-        sta bxh
-ts5     lda SPXEX
-        and #$20
-        beq ts6
-        lda byv                 ; still big: sink, then shrink
-        clc
-        adc #2
-        sta byv
-        cmp #185
-        bcc ts9
-        lda SPXEX
-        and #$df
-        sta SPXEX
-        lda SPYEX
-        and #$df
-        sta SPYEX
-        clc
-        lda bxl
-        adc #12
-        sta bxl
-        lda bxh
-        adc #0
-        sta bxh
-        lda byv
-        clc
-        adc #11
-        sta byv
-        rts
-ts6     lda byv                 ; small now: drop into the trap
-        clc
-        adc #2
-        sta byv
-        cmp #224
-        bcc ts9
-        jmp bosscaptured
-ts9     rts
-
-bosscaptured
-        lda #4
-        sta bstate
-        lda #70
-        sta lcount
-        lda #$20                ; suction off
-        sta SID+11
-        lda #0                  ; +100 points
-        ldx #1
-        jsr addscore
-        jsr showscore
-        lda #$c8
-        sta SID+14
-        lda #$0a
-        sta SID+15
-        lda #$81
-        sta SID+18
-        lda #25
-        sta zap
-        lda #<capstr
-        sta PTR
-        lda #>capstr
-        sta PTR+1
-        jmp printstr
-
-gametimers
-        lda tcool
-        beq gt1
-        dec tcool
-gt1     lda bncnt               ; banner text disappears after 60 frames
-        beq gt2
-        dec bncnt
-        bne gt2
-        lda #<blank12
-        sta PTR
-        lda #>blank12
-        sta PTR+1
-        jsr printstr
-gt2     lda pbn                 ; "POWER UP!" banner
-        beq gt3
-        dec pbn
-        bne gt3
-        lda #1
-        ldx #20
-        jsr showmsg
-gt3     rts
-
-; ---------------------------------------------------------------------
 ;  BLASTER POWER METER and POWER-UPS
 ; ---------------------------------------------------------------------
 powerupdate
@@ -5960,6 +4803,8 @@ quit    jsr irqoff              ; KERNAL interrupt back for BASIC
         jsr CHROUT
         lda #$93
         jsr CHROUT
+        lda #$37                ; BASIC ROM back on for the return
+        sta $01
         ldx spsave              ; stack as it was when BASIC started us: rts goes back to BASIC
         txs
         rts
@@ -8429,3 +7274,1162 @@ fanfare                         ; long rising glide when the boss is caught
         rts
 
         * = CODEORG
+
+        * = $a000               ; RAM under the BASIC ROM (BASIC is switched off): room for more code
+; ---------------------------------------------------------------------
+;  CUTSCENES  (gmode 1 = arrival, 2 = boss approaching, 3 = leaving, 4 = level complete)
+; ---------------------------------------------------------------------
+cinematic
+        lda gmode
+        cmp #1
+        bne ci2
+        jmp introseq
+ci2     cmp #2
+        bne ci3
+        jmp approachseq
+ci3     cmp #3
+        bne ci4
+        jmp outroseq
+ci4     jmp lcseq
+
+cinplace                        ; put hunter, car and boss on the screen
+        lda pxl
+        sta VIC+2
+        lda #221
+        sta VIC+3
+        lda carxl
+        sta VIC+12
+        sta VIC+14
+        lda #221
+        sta VIC+13
+        sta VIC+15
+        lda bxl
+        sta VIC+10
+        lda byv
+        sta VIC+11
+        lda #0
+        ldx pxh
+        beq cp1
+        ora #$02
+cp1     ldx carxh
+        beq cp2
+        ora #$c0
+cp2     ldx bxh
+        beq cp3
+        ora #$20
+cp3     sta MSBX
+        lda cmask
+        sta SPENA
+        rts
+
+carset                          ; car = two sprites (body red, glass + wheels cyan), doubled in X
+        lda cdir
+        bne cr1
+        lda #spr_car_ra/64
+        sta SPRPTR+6
+        lda #spr_car_rb/64
+        sta SPRPTR+7
+        jmp cr2
+cr1     lda #spr_car_la/64
+        sta SPRPTR+6
+        lda #spr_car_lb/64
+        sta SPRPTR+7
+cr2     lda #2
+        sta SPCOL+6
+        lda #3
+        sta SPCOL+7
+        lda SPXEX
+        ora #$c0
+        sta SPXEX
+        lda SPYEX
+        and #$3f
+        sta SPYEX
+        rts
+
+carunset
+        lda SPXEX
+        and #$3f
+        sta SPXEX
+        rts
+
+engine  inc ecnt                ; engine rumble
+        lda ecnt
+        and #3
+        asl
+        asl
+        asl
+        clc
+        adc #$40
+        sta SID+7
+        lda #3
+        sta SID+8
+        lda #$21
+        sta SID+11
+        rts
+
+brake   lda #$00                ; tyre squeal
+        sta SID+14
+        lda #$30
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #12
+        sta zap
+        rts
+
+zaptick lda zap
+        beq zt1
+        dec zap
+        bne zt1
+        lda #$80
+        sta SID+18
+zt1     rts
+
+thump   lda #$00                ; footstep
+        sta SID+14
+        lda #$06
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #5
+        sta zap
+        rts
+
+scream  lda #$00                ; scary shriek
+        sta SID
+        lda #$28
+        sta SID+1
+        lda #$21
+        sta SID+4
+        lda #22
+        sta bpt
+        rts
+
+beep    tay                     ; countdown beep, A = note index
+        lda freqlo,y
+        sta SID
+        lda freqhi,y
+        sta SID+1
+        lda #$21
+        sta SID+4
+        lda #14
+        sta bpt
+        rts
+
+; ---- arrival: car drives in, hunter gets out, car leaves, 3-2-1-GO
+introseq
+        lda gph
+        bne it1
+        jsr carset
+        lda #1
+        sta scrollon
+        clc
+        lda carxl
+        adc #3
+        sta carxl
+        lda carxh
+        adc #0
+        sta carxh
+        jsr engine
+        lda #$c0
+        sta cmask
+        lda carxl
+        cmp #70
+        bcc it_pl
+        lda #1
+        sta gph
+        lda #0
+        sta gcnt
+        sta scrollon
+        lda #$20
+        sta SID+11
+        jsr brake
+it_pl   jmp cinplace
+it1     cmp #1
+        bne it2
+        inc gcnt
+        lda gcnt
+        cmp #24
+        bcc it_pl
+        lda #2
+        sta gph
+        clc
+        lda carxl
+        adc #22
+        sta pxl
+        lda #0
+        sta pxh
+        lda #$c2
+        sta cmask
+        jmp cinplace
+it2     cmp #2
+        bne it3
+        clc
+        lda pxl
+        adc #2
+        sta pxl
+        cmp #160
+        bcc it_pl
+        lda #3
+        sta gph
+        lda #1
+        sta scrollon
+        jmp cinplace
+it3     cmp #3
+        bne it4
+        clc
+        lda carxl
+        adc #4
+        sta carxl
+        lda carxh
+        adc #0
+        sta carxh
+        jsr engine
+        lda carxh
+        beq it_pl
+        lda carxl
+        cmp #80
+        bcc it_pl
+        lda #4
+        sta gph
+        lda #0
+        sta gcnt
+        sta scrollon
+        lda #$02
+        sta cmask
+        lda #$20
+        sta SID+11
+        jsr carunset
+        jmp cinplace
+it4     jsr countdown
+        jmp cinplace
+
+countdown
+        lda gcnt
+        bne cd1
+        ldx #0
+        jsr bigshow
+        lda #5
+        jsr beep
+        jmp cd9
+cd1     cmp #50
+        bne cd2
+        ldx #1
+        jsr bigshow
+        lda #5
+        jsr beep
+        jmp cd9
+cd2     cmp #100
+        bne cd3
+        ldx #2
+        jsr bigshow
+        lda #5
+        jsr beep
+        jmp cd9
+cd3     cmp #150
+        bne cd4
+        ldx #3
+        jsr bigshow
+        lda #8
+        jsr beep
+        jmp cd9
+cd4     cmp #190
+        bne cd9
+        jsr bigclear
+        lda #0
+        sta gmode
+        lda #1
+        sta scrollon
+        sta mtimer
+        lda #$20
+        sta SID+4
+cd9     inc gcnt
+        lda bpt
+        beq cd10
+        dec bpt
+        bne cd10
+        lda #$20
+        sta SID+4
+cd10    rts
+
+bigshow stx tmpx                ; X = 0 "3", 1 "2", 2 "1", 3 "GO!"
+        jsr bigclear
+        ldx tmpx
+        cpx #3
+        bcs bs_go
+        txa
+        ldx #18
+        jmp drawglyph
+bs_go   lda #3
+        ldx #14
+        jsr drawglyph
+        lda #4
+        ldx #18
+        jsr drawglyph
+        lda #5
+        ldx #22
+        jmp drawglyph
+
+bigclear
+        ldx #14
+bk1     lda #32
+        sta SCREEN+8*40+12,x
+        sta SCREEN+9*40+12,x
+        sta SCREEN+10*40+12,x
+        sta SCREEN+11*40+12,x
+        sta SCREEN+12*40+12,x
+        lda #7
+        sta COLORRAM+8*40+12,x
+        sta COLORRAM+9*40+12,x
+        sta COLORRAM+10*40+12,x
+        sta COLORRAM+11*40+12,x
+        sta COLORRAM+12*40+12,x
+        dex
+        bpl bk1
+        rts
+
+drawglyph                       ; A = glyph 0-5, X = first column: 3x5 block letters
+        sta t1
+        asl
+        asl
+        clc
+        adc t1
+        sta gfi
+        stx tmpx
+        lda #<(SCREEN+8*40)
+        clc
+        adc tmpx
+        sta PTR
+        lda #>(SCREEN+8*40)
+        adc #0
+        sta PTR+1
+        lda #5
+        sta grow
+gl1     ldx gfi
+        lda bigfont,x
+        sta t2
+        ldy #0
+gl2     lda t2
+        and bmask,y
+        beq gl3
+        lda #38
+        sta (PTR),y
+gl3     iny
+        cpy #3
+        bne gl2
+        inc gfi
+        lda PTR
+        clc
+        adc #40
+        sta PTR
+        bcc gl4
+        inc PTR+1
+gl4     dec grow
+        bne gl1
+        rts
+
+; ---- boss approaching: the screen stops, footsteps and growls, the boss grows from far away
+startboss
+        lda #5
+        sta bstate
+        lda #2
+        sta gmode
+        lda #0
+        sta gph
+        sta gcnt
+        rts
+
+approachseq
+        lda gph
+        bne ap_a
+        lda gcnt
+        bne ap_a
+        lda #$02                ; only the hunter stays on the screen
+        sta cmask
+        lda #0
+        sta scrollon
+        lda SPXEX
+        and #$df
+        sta SPXEX
+        lda SPYEX
+        and #$df
+        sta SPYEX
+        lda #1
+        sta thc
+        lda #24
+        sta thint
+        lda #<appstr
+        sta PTR
+        lda #>appstr
+        sta PTR+1
+        jsr printstr
+ap_a    ldx gph
+        lda gcnt
+        cmp apdur,x
+        beq ap_nx
+        jmp ap_snd
+ap_nx   lda #0
+        sta gcnt
+        inc gph
+        lda gph
+        cmp #1
+        bne ap_e2
+        lda #spr_boss_s/64      ; stage 1: a tiny shape in the distance
+        sta SPRPTR+5
+        lda #172
+        sta bxl
+        lda #0
+        sta bxh
+        lda #106
+        sta byv
+        lda #$22
+        sta cmask
+        lda #1
+        sta SPCOL+5
+        lda #18
+        sta thint
+        jsr scream
+        jmp ap_snd
+ap_e2   cmp #2
+        bne ap_e3
+        lda #spr_boss/64        ; stage 2: closer
+        sta SPRPTR+5
+        lda #14
+        sta thint
+        jsr scream
+        jmp ap_snd
+ap_e3   cmp #3
+        bne ap_e4
+        lda SPXEX               ; stage 3: huge
+        ora #$20
+        sta SPXEX
+        lda SPYEX
+        ora #$20
+        sta SPYEX
+        lda #161
+        sta bxl
+        lda #95
+        sta byv
+        lda #10
+        sta thint
+        jsr scream
+        jmp ap_snd
+ap_e4   cmp #4
+        bne ap_e5
+        lda #<readystr
+        sta PTR
+        lda #>readystr
+        sta PTR+1
+        jsr printstr
+        lda #$20
+        sta SID+11
+        jmp ap_snd
+ap_e5   lda #<endapp            ; ready: the fight begins
+        sta PTR
+        lda #>endapp
+        sta PTR+1
+        jsr printstr
+        jsr beginfight
+        lda #0
+        sta gmode
+        lda #1
+        sta scrollon
+        sta mtimer
+        lda #15
+        sta SIDVOL
+        lda #$20
+        sta SID+4
+        sta SID+11
+        rts
+ap_snd  lda gph
+        cmp #4
+        bcs ap_x
+        dec thc
+        bne ap_g
+        lda thint
+        sta thc
+        jsr thump
+ap_g    lda gcnt
+        and #$3f
+        asl
+        sta SID+7
+        lda #2
+        sta SID+8
+        lda #$21
+        sta SID+11
+        lda gph                 ; volume swells with every stage
+        asl
+        clc
+        adc #8
+        sta SIDVOL
+ap_x    lda bpt
+        beq ap_y
+        dec bpt
+        bne ap_y
+        lda #$20
+        sta SID+4
+ap_y    inc gcnt
+        jmp cinplace
+apdur   .byte 120,60,60,60,70
+
+; ---- boss caught: the hunter gets into a car and drives away
+startoutro
+        jsr fanfare             ; boss caught: rising fanfare
+        lda #3
+        sta gmode
+        lda #0
+        sta gph
+        sta gcnt
+        sta scrollon
+        lda #$02
+        sta cmask
+        lda #<blank1214
+        sta PTR
+        lda #>blank1214
+        sta PTR+1
+        jmp printstr
+
+outroseq
+        lda gph
+        bne ot1
+        lda pxl                 ; hunter walks to the middle of the street
+        sta d1l
+        lda pxh
+        sta d1h
+        lda #160
+        sta d2l
+        lda #0
+        sta d2h
+        jsr absdiff
+        cmp #3
+        bcc ot0b
+        lda sgn
+        beq ot0r
+        sec
+        lda pxl
+        sbc #3
+        sta pxl
+        lda pxh
+        sbc #0
+        sta pxh
+        jmp ot_pl
+ot0r    clc
+        lda pxl
+        adc #3
+        sta pxl
+        jmp ot_pl
+ot0b    lda #160
+        sta pxl
+        lda #0
+        sta pxh
+        sta carxl
+        sta carxh
+        sta cdir
+        sta gcnt
+        lda #1
+        sta gph
+        jsr carset
+        lda #$c2
+        sta cmask
+ot_pl   jmp cinplace
+ot1     cmp #1
+        bne ot2
+        clc                     ; the car drives in from the left
+        lda carxl
+        adc #3
+        sta carxl
+        jsr engine
+        lda carxl
+        cmp #108
+        bcc ot_pl
+        lda #2
+        sta gph
+        lda #0
+        sta gcnt
+        lda #$20
+        sta SID+11
+        jsr brake
+        jmp ot_pl
+ot2     cmp #2
+        bne ot3
+        inc gcnt
+        lda gcnt
+        cmp #15
+        bcc ot_pl
+        cmp #25                 ; hunter walks into the car
+        bcs ot2b
+        sec
+        lda pxl
+        sbc #2
+        sta pxl
+        jmp ot_pl
+ot2b    lda #3
+        sta gph
+        lda #0
+        sta gcnt
+        lda #$c0                ; hunter is inside
+        sta cmask
+        jmp ot_pl
+ot3     inc gcnt
+        lda gcnt
+        cmp #20
+        bcc ot3p
+        lda #1
+        sta scrollon
+        clc
+        lda carxl
+        adc #4
+        sta carxl
+        lda carxh
+        adc #0
+        sta carxh
+        jsr engine
+        lda carxh
+        beq ot3p
+        lda carxl
+        cmp #80
+        bcc ot3p
+        lda #4                  ; car is gone: the level complete screen
+        sta gmode
+        lda #0
+        sta gph
+        sta gcnt
+        sta scrollon
+        lda #$20
+        sta SID+11
+        jmp carunset
+ot3p    jmp cinplace
+
+; ---- level complete screen: level, creatures busted, score; fire / space continues
+lcseq
+        lda gph
+        bne lc1
+        jsr nymap               ; the taxi drives through New York first
+        jsr levelscreen
+        lda #1
+        sta gph
+        lda #0
+        sta gcnt
+        rts
+lc1     lda gcnt
+        cmp #250
+        bcs lc1b
+        inc gcnt
+lc1b    lda gcnt
+        and #$20
+        beq lc_a
+        lda #11
+        jmp lc_b
+lc_a    lda #1
+lc_b    ldx #26
+lc_c    sta COLORRAM+20*40+9,x
+        dex
+        bpl lc_c
+        lda demo
+        beq lc2
+        lda gcnt
+        cmp #120
+        bcs lc_go
+        rts
+lc2     lda gcnt
+        cmp #30
+        bcc lc_x
+        lda inf
+        beq lc_x
+lc_go   lda lvl
+        cmp #99
+        bcs lc_nl
+        inc lvl
+lc_nl   jmp startlevel
+lc_x    rts
+
+levelscreen
+        jsr ecmoff
+        lda #0
+        sta BORDER
+        sta SPENA
+        sta MSBX
+        lda #$20
+        sta SID+4
+        sta SID+11
+        lda #$80
+        sta SID+18
+        jsr drawbg
+        lda #<lcstr
+        sta PTR
+        lda #>lcstr
+        sta PTR+1
+        jsr printstr
+        jsr shownext            ; where the taxi goes next
+        lda #<(SCREEN+4*40+17)  ; level just finished
+        sta PTR
+        lda #>(SCREEN+4*40+17)
+        sta PTR+1
+        lda lvl
+        jsr put2bin
+        lda #<(SCREEN+8*40+24)  ; creatures busted
+        sta PTR
+        lda #>(SCREEN+8*40+24)
+        sta PTR+1
+        lda gbh
+        ldx gbl
+        jsr put4
+        lda #<(SCREEN+10*40+24) ; score
+        sta PTR
+        lda #>(SCREEN+10*40+24)
+        sta PTR+1
+        lda sch
+        ldx scl
+        jsr put4
+        lda #<(SCREEN+12*40+24) ; high score
+        sta PTR
+        lda #>(SCREEN+12*40+24)
+        sta PTR+1
+        lda hsh_tab
+        ldx hsl_tab
+        jsr put4
+        lda #<(SCREEN+16*40+20) ; next level
+        sta PTR
+        lda #>(SCREEN+16*40+20)
+        sta PTR+1
+        lda lvl
+        clc
+        adc #1
+        jsr put2bin
+        ldx #0                  ; little fanfare
+lv_f    ldy fanotes,x
+        lda freqlo,y
+        sta SID
+        lda freqhi,y
+        sta SID+1
+        lda #$21
+        sta SID+4
+        ldy #10
+lv_w    jsr waitframe
+        dey
+        bne lv_w
+        inx
+        cpx #4
+        bne lv_f
+        lda #$20
+        sta SID+4
+        rts
+
+; ---- home screen 3: the power-ups explained, with the real icons
+ptrfix  lda #spr_ghost/64
+        sta SPRPTR
+        lda #spr_player/64
+        sta SPRPTR+1
+        lda #spr_beam/64
+        sta SPRPTR+2
+        sta SPRPTR+3
+        lda #5
+        sta SPCOL
+        lda #8
+        sta SPCOL+1
+        lda #7
+        sta SPCOL+2
+        sta SPCOL+3
+        rts
+
+showpinfo
+        jsr drawbg
+        lda #<pinfoscr
+        sta PTR
+        lda #>pinfoscr
+        sta PTR+1
+        jsr printstr
+        lda #spr_pwi/64
+        sta SPRPTR
+        lda #spr_pwe/64
+        sta SPRPTR+1
+        lda #spr_pwg/64
+        sta SPRPTR+2
+        lda #spr_pws/64
+        sta SPRPTR+3
+        ldx #0
+pn_l    txa
+        asl
+        tay
+        lda #40
+        sta VIC,y
+        lda pinfy,x
+        sta VIC+1,y
+        inx
+        cpx #4
+        bne pn_l
+        lda #0
+        sta MSBX
+        sta SPXEX
+        sta SPYEX
+        lda #$0f
+        sta SPENA
+        rts
+
+pinfoanim
+        inc ph
+        lda ph
+        lsr
+        lsr
+        and #1
+        tax
+        lda pwcol,x
+        sta SPCOL
+        lda pwcol+2,x
+        sta SPCOL+1
+        lda pwcol+4,x
+        sta SPCOL+2
+        lda pwcol+6,x
+        sta SPCOL+3
+        rts
+
+addscore                        ; A = BCD low, X = BCD high
+        sei
+        sed
+        clc
+        adc scl
+        sta scl
+        txa
+        adc sch
+        sta sch
+        cld
+        cli
+        rts
+
+beginfight
+        lda #spr_boss/64
+        sta SPRPTR+5
+        lda #1
+        sta bstate
+        lda #3
+        sta bhp
+        lda #0
+        sta binv
+        sta tph
+        sta bpat
+        sta p2act
+        lda #1
+        sta SPCOL+5
+        lda SPXEX               ; boss sprite is doubled in both directions
+        ora #$20
+        sta SPXEX
+        lda SPYEX
+        ora #$20
+        sta SPYEX
+        lda #40
+        sta stimer
+        lda #60
+        sta bncnt
+        lda #<bosshud
+        sta PTR
+        lda #>bosshud
+        sta PTR+1
+        jsr printstr
+        rts
+
+bossupdate
+        lda bstate
+        bne bu0
+        rts
+bu0     cmp #1
+        bne bu2
+        lda gxl                 ; state 1: the boss floats like the ghost
+        sec
+        sbc #12
+        sta bxl
+        lda gxh
+        sbc #0
+        sta bxh
+        lda gy
+        sec
+        sbc #10
+        sta byv
+        lda binv
+        beq bu1a
+        dec binv
+bu1a    lda fon
+        beq bu1x
+        lda binv
+        bne bu1x
+        lda col
+        and #$20                ; boss touched ...
+        beq bu1x
+        lda col
+        and #12                 ; ... by the beam
+        beq bu1x
+        jsr bosshit
+bu1x    rts
+bu2     cmp #2
+        bne bu3
+        lda byv                 ; state 2: stunned, sinks to height 150
+        cmp #150
+        bcs bu2a
+        clc
+        adc #2
+        sta byv
+bu2a    lda intrap
+        beq bu2x
+        lda tcool
+        bne bu2x
+        jsr trapdeploy
+bu2x    rts
+bu3     cmp #3
+        bne bu4
+        jmp trapsuck
+bu4     cmp #4
+        bne bu5
+        dec lcount
+        bne bu5
+        jmp startoutro
+bu5     rts
+
+bosshit dec bhp
+        lda #40
+        sta binv
+        lda #$50                ; +50 per boss hit
+        ldx #0
+        jsr addscore
+        jsr showscore
+        lda #90                 ; 35% chance the boss drops a power-up
+        jsr maybedrop
+        lda #$c8
+        sta SID+14
+        lda #$1e
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #10
+        sta zap
+        lda #12
+        sta flash
+        lda bhp
+        beq bh1
+        tax
+        lda bhpcol,x
+        sta SPCOL+5
+        jmp showboss
+bh1     lda #2                  ; third hit: stunned!
+        sta bstate
+        lda #0
+        sta pact
+        sta p2act
+        lda #2                  ; overcooked: red
+        sta SPCOL+5
+        lda #<stunstr
+        sta PTR
+        lda #>stunstr
+        sta PTR+1
+        jsr printstr
+        jmp showboss
+
+trapdeploy
+        clc
+        lda bxl
+        adc #12
+        sta d1l
+        lda bxh
+        adc #0
+        sta d1h
+        lda pxl
+        sta d2l
+        lda pxh
+        sta d2h
+        jsr absdiff
+        cmp #24                 ; hunter must stand under the boss
+        bcc td1
+        lda #30                 ; too far away: the trap fizzles
+        sta tcool
+        lda #$00
+        sta SID+14
+        lda #$03
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #6
+        sta zap
+        rts
+td1     lda pxh                 ; trap lands right next to the hunter
+        bne td2
+        lda pxl
+        cmp #232
+        bcs td2
+        clc
+        adc #24
+        sta txl
+        lda #0
+        sta txh
+        jmp td3
+td2     sec
+        lda pxl
+        sbc #24
+        sta txl
+        lda pxh
+        sbc #0
+        sta txh
+td3     lda #3
+        sta bstate
+        lda #0
+        sta ppact               ; sprite 6 is the trap now
+        sta p2act               ; sprite 7 becomes the suction ray
+        sta tph
+        lda SPYEX               ; ray is double height
+        ora #$80
+        sta SPYEX
+        lda #spr_trapc/64
+        sta SPRPTR+6
+        lda #<blank34
+        sta PTR
+        lda #>blank34
+        sta PTR+1
+        jsr printstr
+        lda #$c8                ; clunk
+        sta SID+14
+        lda #$04
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #5
+        sta zap
+        rts
+
+trapsuck
+        inc tph
+        lda tph
+        cmp #15
+        bcs ts1
+        rts                     ; trap still closed
+ts1     lda #spr_trapo/64       ; trap opens, ray shines
+        sta SPRPTR+6
+        lda #0                  ; rising suction sound on voice 2
+        sta SID+7
+        lda tph
+        lsr
+        lsr
+        lsr
+        clc
+        adc #4
+        sta SID+8
+        lda #$21
+        sta SID+11
+        lda SPXEX               ; X the boss is pulled toward
+        and #$20
+        beq ts2
+        sec
+        lda txl
+        sbc #12
+        sta d1l
+        lda txh
+        sbc #0
+        sta d1h
+        jmp ts3
+ts2     lda txl
+        sta d1l
+        lda txh
+        sta d1h
+ts3     lda bxl
+        sta d2l
+        lda bxh
+        sta d2h
+        jsr absdiff
+        cmp #3
+        bcc ts5
+        lda sgn
+        beq ts4
+        clc
+        lda bxl
+        adc #2
+        sta bxl
+        lda bxh
+        adc #0
+        sta bxh
+        jmp ts5
+ts4     sec
+        lda bxl
+        sbc #2
+        sta bxl
+        lda bxh
+        sbc #0
+        sta bxh
+ts5     lda SPXEX
+        and #$20
+        beq ts6
+        lda byv                 ; still big: sink, then shrink
+        clc
+        adc #2
+        sta byv
+        cmp #185
+        bcc ts9
+        lda SPXEX
+        and #$df
+        sta SPXEX
+        lda SPYEX
+        and #$df
+        sta SPYEX
+        clc
+        lda bxl
+        adc #12
+        sta bxl
+        lda bxh
+        adc #0
+        sta bxh
+        lda byv
+        clc
+        adc #11
+        sta byv
+        rts
+ts6     lda byv                 ; small now: drop into the trap
+        clc
+        adc #2
+        sta byv
+        cmp #224
+        bcc ts9
+        jmp bosscaptured
+ts9     rts
+
+bosscaptured
+        lda #4
+        sta bstate
+        lda #70
+        sta lcount
+        lda #$20                ; suction off
+        sta SID+11
+        lda #0                  ; +100 points
+        ldx #1
+        jsr addscore
+        jsr showscore
+        lda #$c8
+        sta SID+14
+        lda #$0a
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #25
+        sta zap
+        lda #<capstr
+        sta PTR
+        lda #>capstr
+        sta PTR+1
+        jmp printstr
+
+gametimers
+        lda tcool
+        beq gt1
+        dec tcool
+gt1     lda bncnt               ; banner text disappears after 60 frames
+        beq gt2
+        dec bncnt
+        bne gt2
+        lda #<blank12
+        sta PTR
+        lda #>blank12
+        sta PTR+1
+        jsr printstr
+gt2     lda pbn                 ; "POWER UP!" banner
+        beq gt3
+        dec pbn
+        bne gt3
+        lda #1
+        ldx #20
+        jsr showmsg
+gt3     rts
+
