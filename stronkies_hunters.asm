@@ -3983,6 +3983,8 @@ stl2    lda needtab,x
         jsr showlives
         jsr showlvl
         jsr showprog
+        jsr showplace           ; name of the place on the second row
+        jsr settheme            ; colours + boss pattern of this place
         lda #1
         sta mtimer
         sta gmode               ; 1 = car arrives, hunter gets out, countdown
@@ -4486,6 +4488,7 @@ apdur   .byte 120,60,60,60,70
 
 ; ---- boss caught: the hunter gets into a car and drives away
 startoutro
+        jsr fanfare             ; boss caught: rising fanfare
         lda #3
         sta gmode
         lda #0
@@ -4671,6 +4674,7 @@ levelscreen
         lda #>lcstr
         sta PTR+1
         jsr printstr
+        jsr shownext            ; where the taxi goes next
         lda #<(SCREEN+4*40+17)  ; level just finished
         sta PTR
         lda #>(SCREEN+4*40+17)
@@ -5211,7 +5215,18 @@ pw_draw lda cheat               ; cheat: the power bar never drains
         sta pwr
         lda #0
         sta plock
-pw_d2   jmp drawpower
+pw_d2   lda fon                 ; firing on low power: warning beep
+        beq pw_e
+        lda pwr
+        cmp #48
+        bcs pw_e
+        lda ph
+        and #15
+        bne pw_e
+        lda zap
+        bne pw_e
+        jsr lowbeep
+pw_e    jmp drawpower
 
 drawpower                       ; 8 cells in the top bezel (columns 30-37), 20 units each
         ldx #2                  ; colour: red low, yellow, green
@@ -8323,5 +8338,94 @@ wb9     jsr hmclr
         lda sch
         ldx scl
         jmp put4
+
+        * = $0ec6               ; free RAM: places of New York, sound effects
+th_sky  .byte 0,0,6,0,0         ; per place: Harlem, Manhattan, Harbor, JFK, Statue
+th_b1   .byte 2,4,14,6,5
+th_b3   .byte 8,15,3,9,7
+th_boss .byte 10,14,3,1,13
+sn_txt  .text "NEXT STOP:"
+
+settheme                        ; sky / building colours, first boss colour, boss pattern order
+        ldx nm_cur
+        lda th_sky,x
+        sta BGCOL
+        lda th_b1,x
+        sta BGCOL1
+        lda th_b3,x
+        sta BGCOL3
+        lda th_boss,x
+        sta SPCOL+5
+        txa
+        sta bpat
+        rts
+
+showplace                       ; name of the current place, second row
+        ldx nm_cur
+        lda nm_noff,x
+        tax
+        ldy #0
+sp1     lda nm_names,x
+        and #$3f
+        sta SCREEN+40+21,y
+        lda #1
+        sta COLORRAM+40+21,y
+        inx
+        iny
+        cpy #17
+        bne sp1
+        rts
+
+shownext                        ; level complete screen: NEXT STOP: <place>
+        ldy #9
+sn1     lda sn_txt,y
+        and #$3f
+        sta SCREEN+18*40+10,y
+        lda #7
+        sta COLORRAM+18*40+10,y
+        dey
+        bpl sn1
+        ldx nm_cur
+        lda nm_noff,x
+        tax
+        ldy #0
+sn2     lda nm_names,x
+        and #$3f
+        sta SCREEN+18*40+21,y
+        lda #7
+        sta COLORRAM+18*40+21,y
+        inx
+        iny
+        cpy #17
+        bne sn2
+        rts
+
+lowbeep                         ; short low beep (voice 3, same glide as the bonus chime)
+        lda #$10
+        sta chf
+        sta SID+15
+        lda #0
+        sta SID+14
+        lda #$11
+        sta SID+18
+        lda #1
+        sta chimeon
+        lda #6
+        sta zap
+        rts
+
+fanfare                         ; long rising glide when the boss is caught
+        lda #$10
+        sta chf
+        sta SID+15
+        lda #0
+        sta SID+14
+        lda #$11
+        sta SID+18
+        lda #1
+        sta chimeon
+        lda #36
+        sta zap
+        rts
 
         * = CODEORG
