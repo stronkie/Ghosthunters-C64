@@ -6,4 +6,4 @@ New sound effects (a small note-list player, one effect at a time):
 - **GO!:** rising arpeggio at the end of the level-start countdown.
 - **Boss warning:** pulse siren when the boss starts approaching.
 
-Built and regression-tested in a custom 6502 emulator; needs a real-C64 check (1.0 was confirmed on hardware).
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.
