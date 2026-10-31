@@ -10346,7 +10346,7 @@ fxe2    tax                     ; voice 1 / 2 off again
 ; ---------------------------------------------------------------------
 ;  PLACES OF NEW YORK: themes, bosses, sound-effect helpers
 ; ---------------------------------------------------------------------
-th_sky  .byte 0,0,0,0,0         ; per place: Harlem, Manhattan, Harbor, JFK, Statue (all black now)
+th_sky  .byte 6,6,6,6,6         ; per place: dark blue sky everywhere
 th_b1   .byte 6,6,6,6,6              ; same building colours everywhere (as on the menu screens)
 th_b3   .byte 9,9,9,9,9
 th_boss .byte 10,14,3,1,13
@@ -10434,7 +10434,7 @@ fanfare                         ; long rising glide when the boss is caught
         rts
 
 
-th_far  .byte 12,12,12,12,12  ; far city / haze colour (the same everywhere)
+th_far  .byte 0,0,0,0,0     ; far city (parallax) is black everywhere
 farmap
         .byte 32,32,38,38,63,38,32,32,32,34,38,35,32,32,32,34
         .byte 38,38,38,35,32,34,38,35,32,32,32,34,38,38,38,38
