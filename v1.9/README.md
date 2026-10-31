@@ -4,4 +4,4 @@
 - Weather now: Harlem rain, Manhattan lightning, Harbor fog, JFK rain, Statue of Liberty thunderstorm.
 - Everything else is the same as v1.8.
 
-Built and regression-tested in a custom 6502 emulator; v1.8 was confirmed on a real C64, this change only touches the weather table and removes code.
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.

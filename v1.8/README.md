@@ -8,4 +8,4 @@
 - **Weather per place:** Harlem rain, Manhattan lightning with thunder, Harbor fog (the sky pulses light blue), JFK wind streaks that push the hunter in gusts, Statue of Liberty a thunderstorm (rain + lightning).
 - **Boss warning screen:** before the boss approach scene the border flashes red, the siren sounds and "!!! WARNING !!!  BOSS INCOMING" blinks for 1.5 seconds.
 
-Built and regression-tested in a custom 6502 emulator; not yet tested on real hardware (v1.0 to v1.7 were). Free memory left below `$BE00`: about 2 KB.
+Tested on a real Commodore 64 and working. Built and regression-tested in a custom 6502 emulator.
