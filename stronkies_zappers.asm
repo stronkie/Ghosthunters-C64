@@ -5269,6 +5269,7 @@ nameentry
         jsr ecmoff
         lda #0
         sta BORDER
+        sta BGCOL
         jsr sethome
         lda #0
         sta SPENA
@@ -8761,7 +8762,11 @@ lc_x    rts
 levelscreen
         jsr ecmoff
         lda #0
-        sta BORDER
+        sta BORDER              ; all colours back to the default black
+        sta BGCOL
+        sta BGCOL1
+        sta BGCOL2
+        sta BGCOL3
         sta SPENA
         sta MSBX
         lda #$20
@@ -9835,6 +9840,11 @@ sc_skip jsr sc_cleanup
         rts
 sc_cleanup
         lda #0
+        sta BORDER              ; theme colours of the cutscene off again
+        sta BGCOL
+        sta BGCOL1
+        sta BGCOL2
+        sta BGCOL3
         sta SPENA
         sta SPXEX
         sta SPYEX
