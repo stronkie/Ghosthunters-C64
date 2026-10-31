@@ -2,7 +2,7 @@
 
 A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.27 is the current release.** It is only updated if bugs are found.
+**Ghost Zappers V2 is the final release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
@@ -10,11 +10,11 @@ All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL)
 
 | File | What it is |
 |---|---|
-| `stronkies_zappers.prg` | Self-extracting packed program (about 20 KB) |
-| `stronkies_zappers.d64` | Disk image: the game plus a `HIGHSCORE` file for the Hall of Fame |
-| `stronkies_zappers.asm` | Full assembly source |
+| `ghost_zappers_v2.prg` | Self-extracting packed program (about 20 KB) |
+| `ghost_zappers_v2.d64` | Disk image: the game plus a `HIGHSCORE` file for the Hall of Fame |
+| `ghost_zappers_v2.asm` | Full assembly source |
 
-- **Emulator (VICE):** drag the `.d64` or `.prg` onto the window, or run `x64sc stronkies_zappers.d64`.
+- **Emulator (VICE):** drag the `.d64` or `.prg` onto the window, or run `x64sc ghost_zappers_v2.d64`.
 - **Real C64:** write the `.d64` to a floppy or SD2IEC / Ultimate device, then:
 
 ```
@@ -83,11 +83,12 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-The final release is in `v1.27`. Older releases (`v1.0` to `v1.26`) and earlier development snapshots are in `previous-versions/`.
+The final release is in `v2` (`ghost_zappers_v2.prg/.d64/.asm`). Older releases (`v1.0` to `v1.27`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
 | v1.0 | First complete game (real C64 OK) |
+| **V2** | Final release: identical to v1.27, only the file names changed to `ghost_zappers_v2` |
 | v1.1 | Per-place themes, place name on the HUD, "NEXT STOP" screen, low-power beep, boss fanfare (real C64 OK) |
 | v1.2 | More free memory (BASIC off, code under BASIC) (real C64 OK) |
 | v1.3 | Better Hall of Fame (place reached, star for winners) (real C64 OK) |
@@ -116,7 +117,7 @@ The final release is in `v1.27`. Older releases (`v1.0` to `v1.26`) and earlier 
 | v1.24 | Memory tidy-up: all text screens in the compact script format, shared screen-clear routine (about 600 bytes freed), Slime Dodge BEST label fixed (real C64 OK) |
 | v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (real C64 OK) |
 | v1.26 | Power-up info page: small icons, drop rates removed (real C64 OK) |
-| v1.27 | New bonus game GHOST INVADERS (4th item); quarter-wave sine tables and intro scroller buffer moved to free RAM (emulator tested only) |
+| v1.27 | New bonus game GHOST INVADERS (4th item); quarter-wave sine tables and intro scroller buffer moved to free RAM (real C64 OK) |
 
 ## Credits
 
