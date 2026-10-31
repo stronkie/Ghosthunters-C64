@@ -170,22 +170,22 @@ spr_beam
         .align 64
 spr_orb
         .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,0,0
+        .byte 0,24,0
+        .byte 0,60,0
+        .byte 0,126,0
         .byte 0,255,0
-        .byte 3,255,192
-        .byte 7,255,224
-        .byte 15,255,240
-        .byte 15,126,240
-        .byte 14,255,112
-        .byte 15,255,240
-        .byte 7,255,224
-        .byte 7,255,224
-        .byte 3,231,192
+        .byte 0,239,128
+        .byte 1,255,128
         .byte 1,255,128
         .byte 0,255,0
         .byte 0,126,0
         .byte 0,60,0
-        .byte 0,60,0
         .byte 0,24,0
+        .byte 0,0,0
+        .byte 0,0,0
         .byte 0,0,0
         .byte 0,0,0
         .byte 0,0,0
