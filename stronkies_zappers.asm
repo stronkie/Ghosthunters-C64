@@ -1,4 +1,4 @@
-CODEORG = $76a0
+CODEORG = $74f0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$30,$33,$36,$38,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$32,$39,$39,$33,$36,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -952,19 +952,20 @@ mchi    .byte $d9,$da,$da
 msel    .byte 0
 mdel    .byte 0
 hudscr
-        .byte $93
-        .byte $13,$11,$1d,$1d,$99
+        .byte 1,2,13
         .text "CAUGHT:00/20"
         .byte 0
+        .byte $ff
 gostr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 12,15,2
         .text "GAME OVER"
         .byte 0
+        .byte $ff
 demostr
-        .byte $13,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 2,7,7
         .text "DEMO - PRESS FIRE TO PLAY"
         .byte 0
+        .byte $ff
 hallscr
         .byte 0,12,7
         .text "- HALL OF FAME -"
@@ -1007,32 +1008,31 @@ hallscr
         .byte 0
         .byte $ff
 entryscr
-        .byte $93
-        .byte $13,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$9e
+        .byte 5,12,7
         .text "NEW HIGH SCORE!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$9a
+        .byte 0
+        .byte 7,10,14
         .text "YOU MADE THE TOP 10 LIST"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 9,12,1
         .text "YOUR SCORE: 0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 10,12,1
         .text "LEVEL REACHED: 00"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 12,12,1
         .text "ENTER YOUR NAME"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$1d,$1d,$1d,$1d,$98
+        .byte 0
+        .byte 18,4,12
         .text "TYPE YOUR NAME AND PRESS RETURN"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$98
+        .byte 0
+        .byte 20,10,12
         .text "OR USE THE JOYSTICK:"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$98
+        .byte 0
+        .byte 21,3,12
         .text "UP/DOWN:LETTER RIGHT:NEXT FIRE:OK"
         .byte 0
+        .byte $ff
 defname .text "NO NAME "
 mutemsg .text "M:MUSIC ON "
         .text "M:MUSIC OFF"
@@ -1060,37 +1060,47 @@ bintscr
         .byte 0
         .byte $ff
 bosshud
-        .byte $13,$11,$1d,$1d,$1c
+        .byte 1,2,2
         .text "BOSS HP:3   "
         .byte 0
+        .byte $ff
 stunstr
-        .byte $13,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 3,6,7
         .text "BOSS STUNNED! DEPLOY THE TRAP!"
-        .byte $13,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 4,5,1
         .text "STAND UNDER IT - PRESS UP OR T"
         .byte 0
+        .byte $ff
 capstr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 10,13,7
         .text "BOSS CAPTURED!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$99
+        .byte 0
+        .byte 12,10,13
         .text "LEVEL COMPLETE!  +100"
         .byte 0
+        .byte $ff
 blank12
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte 12,0,1
         .text "                                        "
         .byte 0
+        .byte $ff
 blank1214
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
-        .text "                                        "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte 10,0,1
         .text "                                        "
         .byte 0
+        .byte 12,0,1
+        .text "                                        "
+        .byte 0
+        .byte $ff
 blank34
-        .byte $13,$11,$11,$11,$05
-        .text "                                                                                "
+        .byte 3,0,1
+        .text "                                        "
         .byte 0
+        .byte 4,0,1
+        .text "                                        "
+        .byte 0
+        .byte $ff
 msgtxt                  ; 10 character messages (row 5, column 15)
         .text "RECHARGING"
         .text "POWER UP! "
@@ -1170,44 +1180,58 @@ lblhi   .text "HI:"
 lbllvl  .text "LEVEL:"
         .byte 0
 appstr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1c
+        .byte 10,4,2
         .text "YOU HEAR THE BOSS APPROACHING..."
         .byte 0
+        .byte $ff
 readystr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte 10,0,1
         .text "                                        "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0
+        .byte 12,12,7
         .text "READY TO FIGHT!"
         .byte 0
+        .byte $ff
 endapp
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$05
+        .byte 12,0,1
         .text "                                        "
         .byte 0
+        .byte $ff
 lcstr
-        .byte $13,$11,$1d,$9e
-        .text "======================================"
-        .byte $13,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
-        .text "LEVEL 00 CLEARED!"
-        .byte $13,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "GHOSTS BUSTED   "
-        .byte $9f
-        .text "0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "YOUR SCORE      "
-        .byte $9f
-        .text "0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "HIGH SCORE      "
-        .byte $9f
-        .text "0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$99
-        .text "NEXT LEVEL: 00"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "PRESS SPACE OR FIRE TO GO ON"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$9e
+        .byte 1,1,7
         .text "======================================"
         .byte 0
+        .byte 3,11,7
+        .text "LEVEL 00 CLEARED!"
+        .byte 0
+        .byte 5,9,1
+        .text "GHOSTS BUSTED   "
+        .byte 0
+        .byte 5,25,3
+        .text "0000"
+        .byte 0
+        .byte 6,9,1
+        .text "YOUR SCORE      "
+        .byte 0
+        .byte 6,25,3
+        .text "0000"
+        .byte 0
+        .byte 7,9,1
+        .text "HIGH SCORE      "
+        .byte 0
+        .byte 7,25,3
+        .text "0000"
+        .byte 0
+        .byte 10,13,13
+        .text "NEXT LEVEL: 00"
+        .byte 0
+        .byte 12,6,1
+        .text "PRESS SPACE OR FIRE TO GO ON"
+        .byte 0
+        .byte 13,1,7
+        .text "======================================"
+        .byte 0
+        .byte $ff
 pinfoscr
         .byte 0,15,7
         .text "POWER-UPS"
@@ -4365,18 +4389,19 @@ startlevel
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level
+        jsr clrscr
         lda #<hudscr
         sta PTR
         lda #>hudscr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda demo
         beq stl1
         lda #<demostr
         sta PTR
         lda #>demostr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
 stl1    lda #$0c
         sta SPYEX
         lda #0
@@ -4922,7 +4947,7 @@ go1     lda #$c0
         sta PTR
         lda #>gostr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         ldx #0                  ; falling jingle
 gj1     ldy gonotes,x
         lda freqlo,y
@@ -5042,11 +5067,12 @@ nameentry
         jsr sethome
         lda #0
         sta SPENA
+        jsr clrscr
         lda #<entryscr
         sta PTR
         lda #>entryscr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #<(SCREEN+9*40+24)
         sta PTR
         lda #>(SCREEN+9*40+24)
@@ -5885,17 +5911,7 @@ slimedodge
         jsr sidclr              ; the menu tune stops, the game has its own sounds
 sdnew   lda #0
         sta SPENA
-        ldx #0
-        lda #$20
-sdn1    sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne sdn1
-        ldx #232
-sdn2    sta SCREEN+767,x
-        dex
-        bne sdn2
+        jsr clrscr
         lda #1
         jsr fillcol
         ldx #79                 ; the ground
@@ -5913,11 +5929,12 @@ sdn4    lda #13
         sta SPRPTR+2,x
         dex
         bpl sdn4
+        jsr clrscr
         lda #<sdhead
         sta PTR
         lda #>sdhead
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #0
         sta sdscl
         sta sdsch
@@ -6151,7 +6168,7 @@ sdo2    jsr waitframe
         sta PTR
         lda #>sdovr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         ldx #25
 sdo3    jsr waitframe           ; (don't react to the fire button that is still down)
         dex
@@ -6334,17 +6351,7 @@ memghosts
         sta SID+3
 mmnew   lda #0
         sta SPENA
-        ldx #0
-        lda #$20
-mmn0    sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne mmn0
-        ldx #232
-mmn00   sta SCREEN+767,x
-        dex
-        bne mmn00
+        jsr clrscr
         lda #1
         jsr fillcol
         lda #3
@@ -6375,11 +6382,12 @@ mmn1    ldx gw_lp
         sta mm_seq
         lda #0
         sta KEYBUF
+        jsr clrscr
         lda #<mmhead
         sta PTR
         lda #>mmhead
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         jsr mmhud
         lda #$1b
         sta D011
@@ -6389,7 +6397,7 @@ mmround lda #<mmwatch           ; ---- the computer shows the sequence
         sta PTR
         lda #>mmwatch
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #30                 ; faster every round
         sec
         sbc mm_len
@@ -6417,7 +6425,7 @@ mmr2    ldx mm_pos
         sta PTR
         lda #>mmturn
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #0
         sta mm_pos
 mmin    jsr mmdir               ; wait until everything is let go
@@ -6478,7 +6486,7 @@ mmwrong lda #$21                ; wrong ghost: low buzz
         sta PTR
         lda #>mmbad
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #<(SCREEN+21*40+23)
         sta PTR
         lda #>(SCREEN+21*40+23)
@@ -6493,13 +6501,13 @@ mmperfect
         sta PTR
         lda #>mmperf
         sta PTR+1
-        jsr printstr
+        jsr drawscript
 mmend   jsr mmhud
         lda #<mmagain
         sta PTR
         lda #>mmagain
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         ldx #25
         jsr mmwait
 mmo1    jsr mmdir
@@ -6532,17 +6540,7 @@ skyscreen                       ; black sky, the game's skyline along the bottom
         sta D011
         lda #$1e
         sta D018
-        ldx #0
-        lda #$20
-sk_c1   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne sk_c1
-        ldx #232
-sk_c2   sta SCREEN+767,x
-        dex
-        bne sk_c2
+        jsr clrscr
         lda #1
         jsr fillcol
         jsr settheme
@@ -6934,16 +6932,18 @@ wfl2    lda RASTER
         beq wfl2
         rts
 
-printstr                        ; print 0-terminated string at (PTR)
-        ldy #0
-ps1     lda (PTR),y
-        beq psdone
-        jsr CHROUT
-        iny
-        bne ps1
-        inc PTR+1
-        jmp ps1
-psdone  rts
+clrscr  ldx #0                  ; clear the screen (colours stay): A=$20, X=0 afterwards
+        lda #$20
+cls1    sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne cls1
+        ldx #232
+cls2    sta SCREEN+767,x
+        dex
+        bne cls2
+        rts
 
 put4                            ; A,X = BCD hi,lo -> 4 digits at (PTR)
         pha
@@ -7463,17 +7463,7 @@ scroller
         sta D011                ; screen off while clearing
         lda #$1e
         sta D018
-        ldx #0
-        lda #$20
-k_cr0   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne k_cr0
-        ldx #232
-k_cr0b  sta SCREEN+767,x
-        dex
-        bne k_cr0b
+        jsr clrscr
         lda #7
         jsr fillcol
         jsr tunechk             ; Ray Parker Jr keeps playing (starts if it is not)
@@ -7676,17 +7666,7 @@ fl_g    lda fl_g250,x           ; own glyphs: land block and city dot
         lda #6
         sta BORDER
         sta BGCOL
-        ldx #0
-        lda #$20
-fl_c1   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne fl_c1
-        ldx #232
-fl_c2   sta SCREEN+767,x
-        dex
-        bne fl_c2
+        jsr clrscr
         lda #1
         jsr fillcol
         ldx #0
@@ -8085,17 +8065,7 @@ nm_g    lda fl_g250,x
         lda #6
         sta BORDER
         sta BGCOL
-        ldx #0
-        lda #$20
-nm_c1   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne nm_c1
-        ldx #232
-nm_c2   sta SCREEN+767,x
-        dex
-        bne nm_c2
+        jsr clrscr
         lda #1
         jsr fillcol
         ldx #0                  ; the map: 1 = land, 2 = Manhattan
@@ -9458,7 +9428,7 @@ ap_start lda gph
         sta PTR
         lda #>appstr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
 ap_a     ldx gph
         lda gcnt
         cmp apdur,x
@@ -9515,7 +9485,7 @@ ap_e4   cmp #4
         sta PTR
         lda #>readystr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #$20
         sta SID+11
         jmp ap_snd
@@ -9523,7 +9493,7 @@ ap_e5   lda #<endapp            ; ready: the fight begins
         sta PTR
         lda #>endapp
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         jsr beginfight
         lda #0
         sta gmode
@@ -9582,7 +9552,7 @@ startoutro
         sta PTR
         lda #>blank1214
         sta PTR+1
-        jmp printstr
+        jmp drawscript
 
 outroseq
         lda gph
@@ -9754,7 +9724,7 @@ levelscreen
         sta PTR
         lda #>lcstr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         jsr shownext            ; where the taxi goes next
         lda #<(SCREEN+3*40+17)  ; level just finished
         sta PTR
@@ -9922,7 +9892,7 @@ beginfight
         sta PTR
         lda #>bosshud
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         rts
 
 bossupdate
@@ -10017,7 +9987,7 @@ bh1     lda #2                  ; third hit: stunned!
         sta PTR
         lda #>stunstr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         jmp showboss
 
 trapdeploy
@@ -10079,7 +10049,7 @@ td3     lda #3
         sta PTR
         lda #>blank34
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #$c8                ; clunk
         sta SID+14
         lda #$04
@@ -10207,7 +10177,7 @@ bosscaptured
         sta PTR
         lda #>capstr
         sta PTR+1
-        jmp printstr
+        jmp drawscript
 
 gametimers
         lda tcool
@@ -10221,7 +10191,7 @@ gt1     lda bncnt               ; banner text disappears after 60 frames
         sta PTR
         lda #>blank12
         sta PTR+1
-        jsr printstr
+        jsr drawscript
 gt2     lda pbn                 ; "POWER UP!" banner
         beq gt3
         dec pbn
@@ -10510,17 +10480,7 @@ winscr  lda #1                  ; all four places cleared: you have won
         lda #0
         sta BORDER
         sta BGCOL
-        ldx #0
-        lda #$20
-ws1     sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne ws1
-        ldx #232
-ws2     sta SCREEN+767,x
-        dex
-        bne ws2
+        jsr clrscr
         lda #1
         jsr fillcol
         lda #<wn_txt
@@ -10696,17 +10656,7 @@ introscene
         sta sc_cap
         sta fon
         jsr tunechk             ; the tune keeps playing
-        ldx #0                  ; clear the screen
-        lda #$20
-sc_c1   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne sc_c1
-        ldx #232
-sc_c1b  sta SCREEN+767,x
-        dex
-        bne sc_c1b
+        jsr clrscr              ; clear the screen
         lda nm_cur              ; the colours of Harlem, then back
         sta sc_nm
         lda #0
@@ -11258,13 +11208,13 @@ WARNT   = 75
 bwarn   .byte 0
 wbc     .byte 2,GB
 warnstr
-        .byte $13,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 7,12,2
         .text "!!! WARNING !!!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 0
+        .byte 9,13,2
         .text "BOSS INCOMING"
         .byte 0
+        .byte $ff
 
 warnscreen
         lda bwarn
@@ -11276,7 +11226,7 @@ warnscreen
         sta PTR
         lda #>warnstr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #3                  ; the siren
         jsr fxstart
 wn1     lda bwarn               ; border and letters flash every 4 frames
@@ -11331,39 +11281,47 @@ gw_fp   .byte 0
 gw_md   .byte 0
 gw_up   .byte 0
 gw_dw   .byte 0
-gwhead  .byte $93,$13,$05
+gwhead
+        .byte 0,0,1
         .text "HITS:00"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $9e
+        .byte 0
+        .byte 0,14,7
         .text "GHOST WHACK"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $05
+        .byte 0
+        .byte 0,33,1
         .text "LEFT:30"
         .byte 0
+        .byte $ff
 gwres
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 21,7,1
         .text "ZAPPED 00 OF 30  BEST 00"
         .byte 0
+        .byte $ff
 gwrk0
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 22,13,7
         .text "GHOST MASTER!"
         .byte 0
+        .byte $ff
 gwrk1
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1e
+        .byte 22,13,5
         .text "GREAT ZAPPER!"
         .byte 0
+        .byte $ff
 gwrk2
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 22,13,14
         .text "NOT BAD AT ALL"
         .byte 0
+        .byte $ff
 gwrk3
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 22,12,2
         .text "KEEP PRACTISING"
         .byte 0
+        .byte $ff
 gwagain
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .byte 23,6,3
         .text "FIRE: AGAIN  RUN/STOP: MENU"
         .byte 0
+        .byte $ff
 gwrkl   .byte <gwrk0,<gwrk1,<gwrk2,<gwrk3
 gwrkh   .byte >gwrk0,>gwrk1,>gwrk2,>gwrk3
 
@@ -11504,24 +11462,15 @@ ghostwhack
         jsr sidclr              ; the menu tune stops, the game has its own sounds
 gwnew   lda #0
         sta SPENA
-        ldx #0
-        lda #$20
-gwn0    sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne gwn0
-        ldx #232
-gwn00   sta SCREEN+767,x
-        dex
-        bne gwn00
+        jsr clrscr
         lda #1
         jsr fillcol
+        jsr clrscr
         lda #<gwhead
         sta PTR
         lda #>gwhead
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         jsr gwempty
         lda #8
         sta gw_lp
@@ -11708,7 +11657,7 @@ gwo1    ldy #2                  ; round over: chirp
         sta PTR
         lda #>gwres
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #<(SCREEN+21*40+14)
         sta PTR
         lda #>(SCREEN+21*40+14)
@@ -11736,12 +11685,12 @@ gwo2    lda gwrkl,x
         sta PTR
         lda gwrkh,x
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         lda #<gwagain
         sta PTR
         lda #>gwagain
         sta PTR+1
-        jsr printstr
+        jsr drawscript
         ldx #25
 gwo3    jsr waitframe
         dex
@@ -11757,52 +11706,62 @@ gwo5    jsr readinput
         jmp gwnew
 
 ; (text of the mini games lives up here to keep the main program area free)
-sdhead  .byte $93,$13,$05
+sdhead
+        .byte 0,0,1
         .text "TIME:0000"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0
+        .byte 0,13,7
         .text "SLIME DODGE"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 0,28,1
         .text "BEST:0000"
         .byte 0
-sdovr   .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte $ff
+sdovr
+        .byte 10,14,2
         .text "YOU GOT SLIMED!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 12,9,1
         .text "FIRE: AGAIN   RUN/STOP: MENU"
         .byte 0
+        .byte $ff
 
-mmhead  .byte $93,$13,$05
+mmhead
+        .byte 0,0,1
         .text "ROUND:00"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $9e
+        .byte 0
+        .byte 0,14,7
         .text "MEMORY GHOSTS"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $05
+        .byte 0
+        .byte 0,33,1
         .text "BEST:00"
         .byte 0
+        .byte $ff
 mmwatch
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 21,13,7
         .text "   WATCH...   "
         .byte 0
+        .byte $ff
 mmturn
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 21,13,7
         .text "  YOUR TURN!  "
         .byte 0
+        .byte $ff
 mmbad
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 21,7,2
         .text "WRONG!  YOU GOT 00 ROUNDS"
         .byte 0
+        .byte $ff
 mmperf
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 21,7,2
         .text "PERFECT MEMORY!  24 ROUNDS"
         .byte 0
+        .byte $ff
 mmagain
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .byte 23,6,3
         .text "FIRE: AGAIN  RUN/STOP: MENU"
         .byte 0
+        .byte $ff
 
 ; ---------------------------------------------------------------------
 ;  BONUS GAMES page and HOW TO PLAY page
