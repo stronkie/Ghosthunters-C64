@@ -1,8 +1,8 @@
-# Stronkie's Hunters
+# Stronkie's Zappers
 
-A ghost-hunting game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
+A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.10.1 is the final release.** It is only updated if bugs are found.
+**v1.11 is the final release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
@@ -10,15 +10,15 @@ All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL)
 
 | File | What it is |
 |---|---|
-| `stronkies_hunters.prg` | Self-extracting packed program (about 20 KB) |
-| `stronkies_hunters.d64` | Disk image: the game plus a `HIGHSCORE` file for the Hall of Fame |
-| `stronkies_hunters.asm` | Full assembly source |
+| `stronkies_zappers.prg` | Self-extracting packed program (about 20 KB) |
+| `stronkies_zappers.d64` | Disk image: the game plus a `HIGHSCORE` file for the Hall of Fame |
+| `stronkies_zappers.asm` | Full assembly source |
 
-- **Emulator (VICE):** drag the `.d64` or `.prg` onto the window, or run `x64sc stronkies_hunters.d64`.
+- **Emulator (VICE):** drag the `.d64` or `.prg` onto the window, or run `x64sc stronkies_zappers.d64`.
 - **Real C64:** write the `.d64` to a floppy or SD2IEC / Ultimate device, then:
 
 ```
-LOAD"STRONKIES HUNTERS",8,1
+LOAD"STRONKIES",8,1
 RUN
 ```
 
@@ -81,7 +81,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-The final release is in `v1.10.1`. Older releases (`v1.0` to `v1.10`) and earlier development snapshots are in `previous-versions/`.
+The final release is in `v1.11`. Older releases (`v1.0` to `v1.10.1`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -97,6 +97,7 @@ The final release is in `v1.10.1`. Older releases (`v1.0` to `v1.10`) and earlie
 | v1.9 | JFK weather changed from wind to rain, wind code removed (real C64 OK) |
 | v1.10 | Pause menu with stats panel, music toggle, quit to title (real C64 OK) |
 | v1.10.1 | Intro logo: the ghost in the sign is now white (emulator-tested) |
+| v1.11 | Renamed to Ghost Zappers: new logo, titles and file names (emulator-tested) |
 
 ## Credits
 
