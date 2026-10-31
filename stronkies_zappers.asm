@@ -935,8 +935,8 @@ titlescr
         .text "PRESS FIRE OR SPACE"
         .byte $13
         .byte $11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$9f
-        .text "B: SLIME DODGE MINI GAME"
+        .byte $1d,$1d,$1d,$9f
+        .text "B: SLIME DODGE   W: GHOST WHACK"
         .byte 0
 hudscr
         .byte $93
@@ -3126,7 +3126,11 @@ hnostop lda key                 ; B = mini game Slime Dodge
         cmp #28
         bne hnob
         jmp slimedodge
-hnob    lda inf                 ; fire = start the game
+hnob    lda key                 ; W = mini game Ghost Whack
+        cmp #9
+        bne hnow
+        jmp ghostwhack
+hnow    lda inf                 ; fire = start the game
         beq hnofire
         jmp newgame
 hnofire lda key                 ; any other activity resets the idle timer
@@ -10363,3 +10367,447 @@ wn3     sta SCREEN+7*40+12,y
         bpl wn3
 wn9     jmp cinplace
 wcl     .byte 2,7
+
+; ---------------------------------------------------------------------
+;  MINI GAME: GHOST WHACK  (title screen, key W)
+;  Text screen only, no sprites: nine windows, ghosts pop up in them.
+; ---------------------------------------------------------------------
+gwlo    .byte 126,136,146,110,120,130,94,104,114
+gwhi    .byte 4,4,4,5,5,5,6,6,6
+gw_ch   .byte 0
+gw_cl   .byte 0
+gw_face .byte 0
+gw_wx   .byte 0
+gw_lp   .byte 0
+gw_ml   .byte 0
+gw_mr   .byte 0
+gw_r    .byte 0
+gw_c    .byte 0
+gw_g    .byte 0
+gw_ph   .byte 0
+gw_t    .byte 0
+gw_n    .byte 0
+gw_hit  .byte 0
+gw_best .byte 0
+gw_show .byte 0
+gw_fp   .byte 0
+gw_md   .byte 0
+gw_up   .byte 0
+gw_dw   .byte 0
+gwhead  .byte $93,$13,$05
+        .text "HITS:00"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $9e
+        .text "GHOST WHACK"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $05
+        .text "LEFT:30"
+        .byte 0
+gwres
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "ZAPPED 00 OF 30  BEST 00"
+        .byte 0
+gwrk0
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "GHOST MASTER!"
+        .byte 0
+gwrk1
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1e
+        .text "GREAT ZAPPER!"
+        .byte 0
+gwrk2
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .text "NOT BAD AT ALL"
+        .byte 0
+gwrk3
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "KEEP PRACTISING"
+        .byte 0
+gwagain
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .text "FIRE: AGAIN  RUN/STOP: MENU"
+        .byte 0
+gwrkl   .byte <gwrk0,<gwrk1,<gwrk2,<gwrk3
+gwrkh   .byte >gwrk0,>gwrk1,>gwrk2,>gwrk3
+
+gwblk   stx gw_wx               ; draw one 8x5 window block (X = window 0-8)
+        lda gwlo,x
+        sta PTR
+        sta PTR2
+        lda gwhi,x
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        ldx #0
+gwb1    ldy #0
+gwb2    lda gw_ch
+        sta (PTR),y
+        lda gw_cl
+        sta (PTR2),y
+        iny
+        cpy #8
+        bne gwb2
+        clc
+        lda PTR
+        adc #40
+        sta PTR
+        sta PTR2
+        bcc gwb3
+        inc PTR+1
+        inc PTR2+1
+gwb3    inx
+        cpx #5
+        bne gwb1
+        lda gw_face             ; ghost: eyes and mouth are holes
+        beq gwb9
+        ldx gw_wx
+        lda gwlo,x
+        sta PTR
+        lda gwhi,x
+        sta PTR+1
+        lda #$20
+        ldy #42
+        sta (PTR),y
+        ldy #45
+        sta (PTR),y
+        ldy #123
+        sta (PTR),y
+        ldy #124
+        sta (PTR),y
+gwb9    rts
+
+gwempty lda #$a0                ; an empty (dark) window
+        sta gw_ch
+        lda #11
+        sta gw_cl
+        lda #0
+        sta gw_face
+        rts
+gwghost lda #$a0                ; a white ghost
+        sta gw_ch
+        lda #1
+        sta gw_cl
+        sta gw_face
+        rts
+gwboom  lda #$2a                ; a burst of yellow stars
+        sta gw_ch
+        lda #7
+        sta gw_cl
+        lda #0
+        sta gw_face
+        rts
+
+gwcurdraw
+        lda #$3e
+        sta gw_ml
+        lda #$3c
+        sta gw_mr
+        jmp gwcu
+gwcurerase
+        lda #$20
+        sta gw_ml
+        sta gw_mr
+gwcu    lda gwlo,x              ; markers left and right of the middle row
+        clc
+        adc #79
+        sta PTR
+        sta PTR2
+        lda gwhi,x
+        adc #0
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        lda #7
+        ldy #0
+        sta (PTR2),y
+        ldy #9
+        sta (PTR2),y
+        lda gw_ml
+        ldy #0
+        sta (PTR),y
+        lda gw_mr
+        ldy #9
+        sta (PTR),y
+        rts
+
+gwidx   lda gw_r
+        asl
+        clc
+        adc gw_r
+        clc
+        adc gw_c
+        rts
+
+gwhud   lda #<(SCREEN+5)
+        sta PTR
+        lda #>(SCREEN+5)
+        sta PTR+1
+        lda gw_hit
+        jsr put2bin
+        lda #<(SCREEN+38)
+        sta PTR
+        lda #>(SCREEN+38)
+        sta PTR+1
+        lda gw_n
+        jmp put2bin
+
+ghostwhack
+        jsr ecmoff
+        lda #0
+        sta SPENA
+        sta MSBX
+        sta BORDER
+        sta BGCOL
+        lda #$0b
+        sta D011
+        lda #$1e
+        sta D018
+        jsr sethome             ; the menu tune keeps playing
+gwnew   lda #0
+        sta SPENA
+        ldx #0
+        lda #$20
+gwn0    sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne gwn0
+        ldx #232
+gwn00   sta SCREEN+767,x
+        dex
+        bne gwn00
+        lda #1
+        jsr fillcol
+        lda #<gwhead
+        sta PTR
+        lda #>gwhead
+        sta PTR+1
+        jsr printstr
+        jsr gwempty
+        lda #8
+        sta gw_lp
+gwn1    ldx gw_lp
+        jsr gwblk
+        dec gw_lp
+        bpl gwn1
+        lda #1
+        sta gw_r
+        sta gw_c
+        ldx #4
+        jsr gwcurdraw
+        lda #0
+        sta gw_ph
+        sta gw_hit
+        sta gw_md
+        lda #1
+        sta gw_fp               ; (a fire button that is still down does not count)
+        lda #30
+        sta gw_n
+        lda #60
+        sta gw_show
+        lda #40
+        sta gw_t
+        lda #$ff
+        sta gw_g
+        lda RASTER
+        ora #1
+        sta sdseed
+        jsr gwhud
+        lda #0
+        sta KEYBUF
+        lda #$1b
+        sta D011
+gwloop  jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        bne gwl0
+        jmp sdexit
+gwl0    jsr readinput
+        lda #0
+        sta gw_up
+        sta gw_dw
+        lda joyv
+        and #1
+        bne gwu1
+        inc gw_up
+gwu1    lda key
+        cmp #9
+        bne gwu2
+        inc gw_up
+gwu2    lda joyv
+        and #2
+        bne gwu3
+        inc gw_dw
+gwu3    lda key
+        cmp #13
+        bne gwu4
+        inc gw_dw
+gwu4    lda inl
+        ora inr
+        ora gw_up
+        ora gw_dw
+        bne gwany
+        lda #0
+        sta gw_md
+        jmp gwfire
+gwany   lda gw_md
+        beq gwmv
+        dec gw_md
+        jmp gwfire
+gwmv    lda #8                  ; one step, then a short pause
+        sta gw_md
+        jsr gwidx
+        tax
+        jsr gwcurerase
+        lda inl
+        beq gwv1
+        lda gw_c
+        beq gwv1
+        dec gw_c
+gwv1    lda inr
+        beq gwv2
+        lda gw_c
+        cmp #2
+        bcs gwv2
+        inc gw_c
+gwv2    lda gw_up
+        beq gwv3
+        lda gw_r
+        beq gwv3
+        dec gw_r
+gwv3    lda gw_dw
+        beq gwv4
+        lda gw_r
+        cmp #2
+        bcs gwv4
+        inc gw_r
+gwv4    jsr gwidx
+        tax
+        jsr gwcurdraw
+gwfire  lda inf
+        beq gwf0
+        lda gw_fp
+        bne gwphase
+        lda #1
+        sta gw_fp
+        lda gw_ph               ; a ghost is up and the cursor is on it?
+        cmp #1
+        bne gwphase
+        jsr gwidx
+        cmp gw_g
+        bne gwphase
+        inc gw_hit              ; zapped!
+        lda #2
+        sta gw_ph
+        lda #10
+        sta gw_t
+        jsr gwboom
+        ldx gw_g
+        jsr gwblk
+        jsr gwhud
+        jmp gwphase
+gwf0    lda #0
+        sta gw_fp
+gwphase lda gw_ph
+        beq gwp0
+        cmp #1
+        beq gwp1
+        dec gw_t                ; the burst fades
+        bne gwend
+gwclr   jsr gwempty
+        ldx gw_g
+        jsr gwblk
+        lda #0
+        sta gw_ph
+        lda #15
+        sta gw_t
+        jmp gwend
+gwp1    dec gw_t                ; ghost too slow: it hides again
+        beq gwclr
+        jmp gwend
+gwp0    dec gw_t
+        bne gwend
+        lda gw_n
+        beq gwover
+gwpk    jsr sdrnd               ; next window (never the same twice)
+        and #15
+        cmp #9
+        bcc gwpk1
+        sbc #9
+gwpk1   cmp gw_g
+        beq gwpk
+        sta gw_g
+        jsr gwghost
+        ldx gw_g
+        jsr gwblk
+        lda #1
+        sta gw_ph
+        lda gw_show
+        sta gw_t
+        cmp #25                 ; every ghost stays a little shorter
+        bcc gwpk2
+        sbc #2
+        sta gw_show
+gwpk2   dec gw_n
+        jsr gwhud
+gwend   jmp gwloop
+
+gwover  lda gw_hit              ; round over
+        cmp gw_best
+        bcc gwo1
+        sta gw_best
+gwo1    lda #<gwres
+        sta PTR
+        lda #>gwres
+        sta PTR+1
+        jsr printstr
+        lda #<(SCREEN+21*40+14)
+        sta PTR
+        lda #>(SCREEN+21*40+14)
+        sta PTR+1
+        lda gw_hit
+        jsr put2bin
+        lda #<(SCREEN+21*40+29)
+        sta PTR
+        lda #>(SCREEN+21*40+29)
+        sta PTR+1
+        lda gw_best
+        jsr put2bin
+        ldx #0                  ; the rank
+        lda gw_hit
+        cmp #25
+        bcs gwo2
+        inx
+        cmp #18
+        bcs gwo2
+        inx
+        cmp #10
+        bcs gwo2
+        inx
+gwo2    lda gwrkl,x
+        sta PTR
+        lda gwrkh,x
+        sta PTR+1
+        jsr printstr
+        lda #<gwagain
+        sta PTR
+        lda #>gwagain
+        sta PTR+1
+        jsr printstr
+        ldx #25
+gwo3    jsr waitframe
+        dex
+        bne gwo3
+gwo4    jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        bne gwo5
+        jmp sdexit
+gwo5    jsr readinput
+        lda inf
+        beq gwo4
+        jmp gwnew
+
+
