@@ -935,8 +935,8 @@ titlescr
         .text "PRESS FIRE OR SPACE"
         .byte $13
         .byte $11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$9f
-        .text "B: SLIME DODGE   W: GHOST WHACK"
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .text "B:SLIME  W:WHACK  Y:MEMORY"
         .byte 0
 hudscr
         .byte $93
@@ -3130,7 +3130,11 @@ hnob    lda key                 ; W = mini game Ghost Whack
         cmp #9
         bne hnow
         jmp ghostwhack
-hnow    lda inf                 ; fire = start the game
+hnow    lda key                 ; Y = mini game Memory Ghosts
+        cmp #25
+        bne hnoh
+        jmp memghosts
+hnoh    lda inf                 ; fire = start the game
         beq hnofire
         jmp newgame
 hnofire lda key                 ; any other activity resets the idle timer
@@ -6131,6 +6135,354 @@ sdx1    jsr waitframe           ; wait until RUN/STOP is let go (the menu would 
         lda #0
         sta KEYBUF
         jmp title
+
+
+
+; ---------------------------------------------------------------------
+;  MINI GAME: MEMORY GHOSTS  (title screen, key M... see hook: key H)
+;  Four ghosts light up with a note each; repeat the sequence.
+;  Uses the Ghost Whack window blocks; the tune is stopped and
+;  voice 1 plays the notes.
+; ---------------------------------------------------------------------
+mmwin   .byte 1,3,5,7               ; windows: up, left, right, down
+mmdim   .byte 5,2,6,8
+mmlit   .byte 13,10,14,7
+mmfl    .byte $ed,$67,$13,$ce       ; E4  C4  G4  C5
+mmfh    .byte $15,$11,$1a,$22
+mm_seq  .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+mm_len  .byte 0
+mm_best .byte 0
+mm_lt   .byte 0
+mm_pos  .byte 0
+mm_d    .byte 0
+mm_i    .byte 0
+mmhead  .byte $93,$13,$05
+        .text "ROUND:00"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $9e
+        .text "MEMORY GHOSTS"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $05
+        .text "BEST:00"
+        .byte 0
+mmwatch
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "   WATCH...   "
+        .byte 0
+mmturn
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "  YOUR TURN!  "
+        .byte 0
+mmbad
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "WRONG!  YOU GOT 00 ROUNDS"
+        .byte 0
+mmperf
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "PERFECT MEMORY!  24 ROUNDS"
+        .byte 0
+mmagain
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .text "FIRE: AGAIN  RUN/STOP: MENU"
+        .byte 0
+
+mmlight stx mm_i                ; A = direction 0-3: ghost lit up + its note
+        tax
+        lda mmwin,x
+        pha
+        lda mmlit,x
+        sta gw_cl
+        lda #$a0
+        sta gw_ch
+        lda #1
+        sta gw_face
+        lda mmfl,x
+        sta SID
+        lda mmfh,x
+        sta SID+1
+        lda #$41
+        sta SID+4
+        pla
+        tax
+        jsr gwblk
+        ldx mm_i
+        rts
+mmdark  tax                     ; A = direction: ghost dark again, note off
+        lda mmwin,x
+        pha
+        lda mmdim,x
+        sta gw_cl
+        lda #$a0
+        sta gw_ch
+        lda #1
+        sta gw_face
+        lda #$40
+        sta SID+4
+        pla
+        tax
+        jsr gwblk
+        ldx mm_i
+        rts
+
+mmwait  jsr waitframe           ; X frames (RUN/STOP leaves)
+        lda KEYPRESS
+        cmp #63
+        bne mmw1
+        jmp sdexit
+mmw1    dex
+        bne mmwait
+        rts
+
+mmdir   jsr waitframe           ; one frame: A = direction pressed (0 up,1 left,2 right,3 down) or $ff
+        lda KEYPRESS
+        cmp #63
+        bne mmd0
+        jmp sdexit
+mmd0    jsr readinput
+        lda joyv
+        and #1
+        beq mmd_u
+        lda key
+        cmp #9
+        beq mmd_u
+        lda inl
+        bne mmd_l
+        lda inr
+        bne mmd_r
+        lda joyv
+        and #2
+        beq mmd_d
+        lda key
+        cmp #13
+        beq mmd_d
+        lda #$ff
+        rts
+mmd_u   lda #0
+        rts
+mmd_l   lda #1
+        rts
+mmd_r   lda #2
+        rts
+mmd_d   lda #3
+        rts
+
+mmhud   lda #<(SCREEN+6)
+        sta PTR
+        lda #>(SCREEN+6)
+        sta PTR+1
+        lda mm_len
+        jsr put2bin
+        lda #<(SCREEN+38)
+        sta PTR
+        lda #>(SCREEN+38)
+        sta PTR+1
+        lda mm_best
+        jmp put2bin
+
+memghosts
+        jsr ecmoff
+        lda #0
+        sta SPENA
+        sta MSBX
+        sta BORDER
+        sta BGCOL
+        lda #$0b
+        sta D011
+        lda #$1e
+        sta D018
+        jsr sidclr              ; the menu tune stops: voice 1 plays the notes
+        lda #$09
+        sta SID+5
+        lda #$f0
+        sta SID+6
+        lda #0
+        sta SID+2
+        lda #8
+        sta SID+3
+mmnew   lda #0
+        sta SPENA
+        ldx #0
+        lda #$20
+mmn0    sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne mmn0
+        ldx #232
+mmn00   sta SCREEN+767,x
+        dex
+        bne mmn00
+        lda #1
+        jsr fillcol
+        lda #3
+        sta gw_lp
+mmn1    ldx gw_lp
+        lda mmwin,x
+        pha
+        lda mmdim,x
+        sta gw_cl
+        lda #$a0
+        sta gw_ch
+        lda #1
+        sta gw_face
+        pla
+        tax
+        jsr gwblk
+        dec gw_lp
+        bpl mmn1
+        lda #1
+        sta mm_len
+        lda RASTER
+        ora #1
+        sta sdseed
+        jsr sdrnd
+        lsr
+        lsr
+        and #3
+        sta mm_seq
+        lda #0
+        sta KEYBUF
+        lda #<mmhead
+        sta PTR
+        lda #>mmhead
+        sta PTR+1
+        jsr printstr
+        jsr mmhud
+        lda #$1b
+        sta D011
+        ldx #50
+        jsr mmwait
+mmround lda #<mmwatch           ; ---- the computer shows the sequence
+        sta PTR
+        lda #>mmwatch
+        sta PTR+1
+        jsr printstr
+        lda #30                 ; faster every round
+        sec
+        sbc mm_len
+        cmp #12
+        bcs mmr1
+        lda #12
+mmr1    sta mm_lt
+        lda #0
+        sta mm_pos
+mmr2    ldx mm_pos
+        lda mm_seq,x
+        sta mm_d
+        jsr mmlight
+        ldx mm_lt
+        jsr mmwait
+        lda mm_d
+        jsr mmdark
+        ldx #8
+        jsr mmwait
+        inc mm_pos
+        lda mm_pos
+        cmp mm_len
+        bne mmr2
+        lda #<mmturn            ; ---- now you
+        sta PTR
+        lda #>mmturn
+        sta PTR+1
+        jsr printstr
+        lda #0
+        sta mm_pos
+mmin    jsr mmdir               ; wait until everything is let go
+        cmp #$ff
+        bne mmin
+mmin2   jsr mmdir               ; wait for a press
+        cmp #$ff
+        beq mmin2
+        sta mm_d
+        jsr mmlight
+        ldx mm_pos
+        lda mm_seq,x
+        cmp mm_d
+        bne mmwrong
+mmin3   jsr mmdir               ; note stays on while the stick is held
+        cmp #$ff
+        bne mmin3
+        lda mm_d
+        jsr mmdark
+        inc mm_pos
+        lda mm_pos
+        cmp mm_len
+        bne mmin
+        lda mm_len              ; round done
+        cmp mm_best
+        bcc mmok1
+        sta mm_best
+mmok1   cmp #24
+        bcs mmperfect
+        jsr mmhud
+        inc mm_len
+        jsr sdrnd
+        lsr
+        lsr
+        and #3
+        ldx mm_len
+        dex
+        sta mm_seq,x
+        jsr mmhud
+        ldx #40
+        jsr mmwait
+        jmp mmround
+mmwrong lda #$21                ; wrong ghost: low buzz
+        sta SID+4
+        lda #$e8
+        sta SID
+        lda #$03
+        sta SID+1
+        ldx #2
+        stx BORDER
+        ldx #30
+        jsr mmwait
+        lda #$40
+        sta SID+4
+        lda #0
+        sta BORDER
+        lda #<mmbad
+        sta PTR
+        lda #>mmbad
+        sta PTR+1
+        jsr printstr
+        lda #<(SCREEN+21*40+23)
+        sta PTR
+        lda #>(SCREEN+21*40+23)
+        sta PTR+1
+        lda mm_len
+        sec
+        sbc #1
+        jsr put2bin
+        jmp mmend
+mmperfect
+        lda #<mmperf
+        sta PTR
+        lda #>mmperf
+        sta PTR+1
+        jsr printstr
+mmend   jsr mmhud
+        lda #<mmagain
+        sta PTR
+        lda #>mmagain
+        sta PTR+1
+        jsr printstr
+        ldx #25
+        jsr mmwait
+mmo1    jsr mmdir
+        cmp #$ff
+        beq mmo2
+        jmp mmo1
+mmo2    jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        bne mmo3
+        jmp sdexit
+mmo3    jsr readinput
+        lda inf
+        beq mmo2
+        jmp mmnew
 
 
 waitframe                       ; wait for one full frame (raster line 248)

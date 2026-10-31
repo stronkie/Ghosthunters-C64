@@ -2,7 +2,7 @@
 
 Oldest to newest. Each folder holds the source (`.asm`) and the program (`.prg`; v15 builds also have a `.d64`).
 Folders named `v15-before_X` are the build as it was just *before* feature X was added.
-The final release is `../v1.13` (and the root folder).
+The final release is `../v1.14` (and the root folder).
 
 | Folder | What it is |
 |---|---|
@@ -22,4 +22,4 @@ The final release is `../v1.13` (and the root folder).
 | `v15-before_cheat2` | fireworks ending and flight home |
 | `v15-before_bonus` | cheat label next to CAUGHT, full power bar, boss attacks only from the boss |
 
-These older development builds were only tested in a custom 6502 emulator. The numbered releases (`v1.0` to `v1.12`, in this folder) are all confirmed on a real Commodore 64.
+These older development builds were only tested in a custom 6502 emulator. The numbered releases (`v1.0` to `v1.13`, in this folder) are all confirmed on a real Commodore 64.
