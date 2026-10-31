@@ -76,7 +76,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 - Pure 6502 assembly, built with a small custom Python assembler, packed with a custom LZ packer into a self-extracting PRG.
 - BASIC is switched off while the game runs (`$01 = $36`), which frees RAM under the BASIC ROM at `$A000` for cutscene code, sound effects and the places of New York.
 - Memory map: sprites and variables low (`$0801-$0FFF`), tune at `$1000`, map and charset in VIC bank 0 up to `$3FFF`, data from `$4000`, main code below `$A000`.
-- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware (v1.0 to v1.10).
+- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware (all versions listed here).
 - The Hall of Fame file `HIGHSCORE` is a 120-byte SEQ file; old 110-byte files are converted automatically.
 
 ## Versions
@@ -96,20 +96,20 @@ The final release is in `v1.22`. Older releases (`v1.0` to `v1.21`) and earlier 
 | v1.8 | Wobbling ghosts, new ghost types, weather per place, boss warning screen (real C64 OK) |
 | v1.9 | JFK weather changed from wind to rain, wind code removed (real C64 OK) |
 | v1.10 | Pause menu with stats panel, music toggle, quit to title (real C64 OK) |
-| v1.10.1 | Intro logo: the ghost in the sign is now white (emulator-tested) |
-| v1.11 | Renamed to Ghost Zappers: new logo, titles and file names (emulator-tested) |
-| v1.11.1 | 3 seconds of invincibility after a slime hit; colours reset to default after each level (emulator-tested) |
-| v1.12 | Mini game Slime Dodge (confirmed on a real C64) |
-| v1.13 | Mini game Ghost Whack |
-| v1.14 | Mini game Memory Ghosts |
-| v1.15 | New level-complete status screen: panel over the skyline of the next place |
-| v1.16 | New main menu: skyline backdrop, START GAME / BONUS GAMES / HOW TO PLAY, bonus games page |
-| v1.17 | Hall of Fame, power-up and boss info pages redone in the skyline style |
-| v1.18 | Black sky and the same building colours in every city part, weather effects kept (emulator-tested) |
-| v1.19 | Smaller ghosts in the levels (about 70% of the old size), same movement and colours (emulator-tested) |
-| v1.20 | New ending: skippable fireworks, skyline status screen with tally and rank, waving hunter, victory fanfare, credits as skyline pages (emulator-tested) |
-| v1.21 | Smaller slime ball to match the smaller ghosts (emulator-tested) |
-| v1.22 | Mini games stop the music and have their own sound effects; quitting returns to the main menu and the tune restarts (emulator-tested) |
+| v1.10.1 | Intro logo: the ghost in the sign is now white (real C64 OK) |
+| v1.11 | Renamed to Ghost Zappers: new logo, titles and file names (real C64 OK) |
+| v1.11.1 | 3 seconds of invincibility after a slime hit; colours reset to default after each level (real C64 OK) |
+| v1.12 | Mini game Slime Dodge (real C64 OK) |
+| v1.13 | Mini game Ghost Whack (real C64 OK) |
+| v1.14 | Mini game Memory Ghosts (real C64 OK) |
+| v1.15 | New level-complete status screen: panel over the skyline of the next place (real C64 OK) |
+| v1.16 | New main menu: skyline backdrop, START GAME / BONUS GAMES / HOW TO PLAY, bonus games page (real C64 OK) |
+| v1.17 | Hall of Fame, power-up and boss info pages redone in the skyline style (real C64 OK) |
+| v1.18 | Black sky and the same building colours in every city part, weather effects kept (real C64 OK) |
+| v1.19 | Smaller ghosts in the levels (about 70% of the old size), same movement and colours (real C64 OK) |
+| v1.20 | New ending: skippable fireworks, skyline status screen with tally and rank, waving hunter, victory fanfare, credits as skyline pages (real C64 OK) |
+| v1.21 | Smaller slime ball to match the smaller ghosts (real C64 OK) |
+| v1.22 | Mini games stop the music and have their own sound effects; quitting returns to the main menu and the tune restarts (real C64 OK) |
 
 ## Credits
 
