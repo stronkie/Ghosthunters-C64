@@ -1,4 +1,4 @@
-CODEORG = $7950
+CODEORG = $7990
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$31,$30,$35,$36,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$31,$31,$32,$30,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -933,6 +933,10 @@ titlescr
         .byte $11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
         .byte $1d,$05
         .text "PRESS FIRE OR SPACE"
+        .byte $13
+        .byte $11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .text "B: SLIME DODGE MINI GAME"
         .byte 0
 hudscr
         .byte $93
@@ -3118,7 +3122,11 @@ mr2     lda key
         cmp #63                 ; RUN/STOP
         bne hnostop
         jmp quit
-hnostop lda inf                 ; fire = start the game
+hnostop lda key                 ; B = mini game Slime Dodge
+        cmp #28
+        bne hnob
+        jmp slimedodge
+hnob    lda inf                 ; fire = start the game
         beq hnofire
         jmp newgame
 hnofire lda key                 ; any other activity resets the idle timer
@@ -5751,6 +5759,376 @@ sc1     sta SID,x
 ; ---------------------------------------------------------------------
 ;  subroutines
 ; ---------------------------------------------------------------------
+; ---------------------------------------------------------------------
+;  MINI GAME: SLIME DODGE  (title screen, key B)
+;  Its own screen: nothing of the real game is running, and on the way
+;  out every sprite register is set back before the title screen returns.
+; ---------------------------------------------------------------------
+SDHY    = 213                   ; hunter sprite Y
+sdx_lo  .byte 24,44,64,84,104,124,144,164,184,204,224,244,8,28
+sdx_hi  .byte 0,0,0,0,0,0,0,0,0,0,0,0,1,1
+sdoff   .byte 4,6,8,10,12,14
+sdbit   .byte 4,8,16,32,64,128
+sd_a    .byte 0,0,0,0,0,0
+sd_w    .byte 0,0,0,0,0,0
+sd_c    .byte 0,0,0,0,0,0
+sd_y    .byte 0,0,0,0,0,0
+sdhxl   .byte 0
+sdhxh   .byte 0
+sdscl   .byte 0
+sdsch   .byte 0
+sdbsl   .byte 0
+sdbsh   .byte 0
+sdft    .byte 0
+sdlt    .byte 0
+sdlv    .byte 0
+sdspd   .byte 0
+sdact   .byte 0
+sdm     .byte 0
+sdmsb   .byte 0
+sdt2    .byte 0
+sdseed  .byte 1
+sdhead  .byte $93,$13,$05
+        .text "TIME:0000"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "SLIME DODGE"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "BEST:0000"
+        .byte 0
+sdovr   .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "YOU GOT SLIMED!"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "FIRE: AGAIN   RUN/STOP: MENU"
+        .byte 0
+
+sdrnd   lda sdseed              ; small random number generator
+        asl
+        bcc sdr1
+        eor #$1d
+sdr1    sta sdseed
+        rts
+
+sdscore lda #<(SCREEN+5)        ; TIME and BEST on the top row
+        sta PTR
+        lda #>(SCREEN+5)
+        sta PTR+1
+        lda sdsch
+        ldx sdscl
+        jsr put4
+        lda #<(SCREEN+33)
+        sta PTR
+        lda #>(SCREEN+33)
+        sta PTR+1
+        lda sdbsh
+        ldx sdbsl
+        jmp put4
+
+slimedodge
+        jsr ecmoff
+        lda #0
+        sta SPENA
+        sta MSBX
+        sta BORDER
+        sta BGCOL
+        lda #$0b
+        sta D011
+        lda #$1e
+        sta D018
+        jsr sethome             ; the menu tune keeps playing
+sdnew   lda #0
+        sta SPENA
+        ldx #0
+        lda #$20
+sdn1    sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne sdn1
+        ldx #232
+sdn2    sta SCREEN+767,x
+        dex
+        bne sdn2
+        lda #1
+        jsr fillcol
+        ldx #79                 ; the ground
+sdn3    lda #$a0
+        sta SCREEN+23*40,x
+        lda #5
+        sta COLORRAM+23*40,x
+        dex
+        bpl sdn3
+        jsr sprreset            ; clean sprite set-up: pointers, colours, no expansion
+        ldx #5                  ; all six slime balls look the same
+sdn4    lda #13
+        sta SPCOL+2,x
+        lda #spr_orb/64
+        sta SPRPTR+2,x
+        dex
+        bpl sdn4
+        lda #<sdhead
+        sta PTR
+        lda #>sdhead
+        sta PTR+1
+        jsr printstr
+        lda #0
+        sta sdscl
+        sta sdsch
+        sta sdft
+        sta sdlt
+        sta sdlv
+        sta sdhxh
+        ldx #5
+sdn5    lda #0
+        sta sd_a,x
+        sta sd_y,x
+        sta sd_c,x
+        txa
+        asl
+        sta sd_w,x              ; (they start one after the other)
+        asl
+        clc
+        adc #10
+        sta sd_w,x
+        dex
+        bpl sdn5
+        lda #160
+        sta sdhxl
+        lda RASTER
+        ora #1
+        sta sdseed
+        jsr sdscore
+        lda #0
+        sta KEYBUF
+        lda #$1b
+        sta D011
+sdloop  jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        bne sdl0
+        jmp sdexit
+sdl0    jsr readinput
+        lda inl                 ; the hunter walks 3 pixels a frame
+        beq sdl1
+        sec
+        lda sdhxl
+        sbc #3
+        sta sdhxl
+        lda sdhxh
+        bne sdl1
+        lda sdhxl
+        cmp #24
+        bcs sdl1
+        lda #24
+        sta sdhxl
+sdl1    lda inr
+        beq sdl2
+        clc
+        lda sdhxl
+        adc #3
+        sta sdhxl
+        lda sdhxh
+        adc #0
+        sta sdhxh
+        beq sdl2
+        lda sdhxl
+        cmp #$29
+        bcc sdl2
+        lda #$28
+        sta sdhxl
+sdl2    inc sdlt                ; every 3 seconds a bit faster, more slime
+        lda sdlt
+        cmp #150
+        bne sdl3
+        lda #0
+        sta sdlt
+        lda sdlv
+        cmp #8
+        bcs sdl3
+        inc sdlv
+sdl3    lda sdlv
+        lsr
+        clc
+        adc #2
+        sta sdspd
+        sta sdact
+        inc sdft                ; score: half seconds survived
+        lda sdft
+        cmp #25
+        bne sdl4
+        lda #0
+        sta sdft
+        sed
+        clc
+        lda sdscl
+        adc #1
+        sta sdscl
+        lda sdsch
+        adc #0
+        sta sdsch
+        cld
+        jsr sdscore
+sdl4    ldx #0                  ; the slime balls
+sdb1    lda sd_a,x
+        bne sdfall
+        cpx sdact
+        bcs sdbn
+        lda sd_w,x
+        beq sdspawn
+        dec sd_w,x
+        jmp sdbn
+sdspawn jsr sdrnd
+        and #15
+        cmp #14
+        bcc sds1
+        sbc #14
+sds1    sta sd_c,x
+        lda #58
+        sta sd_y,x
+        lda #1
+        sta sd_a,x
+        jmp sdbn
+sdfall  clc
+        lda sd_y,x
+        adc sdspd
+        sta sd_y,x
+        cmp #240
+        bcc sdbn
+        lda #0
+        sta sd_a,x
+        jsr sdrnd
+        and #31
+        clc
+        adc #4
+        sta sd_w,x
+sdbn    inx
+        cpx #6
+        bne sdb1
+        lda #0                  ; put everything on the screen
+        sta sdm
+        sta sdmsb
+        ldx #0
+sdd1    lda sd_a,x
+        beq sdd9
+        lda sd_c,x
+        tay
+        lda sdx_hi,y
+        sta sdt2
+        lda sdx_lo,y
+        pha
+        ldy sdoff,x
+        pla
+        sta VIC,y
+        lda sd_y,x
+        sta VIC+1,y
+        lda sdm
+        ora sdbit,x
+        sta sdm
+        lda sdt2
+        beq sdd9
+        lda sdmsb
+        ora sdbit,x
+        sta sdmsb
+sdd9    inx
+        cpx #6
+        bne sdd1
+        lda sdhxl
+        sta VIC+2
+        lda #SDHY
+        sta VIC+3
+        lda sdm
+        ora #2
+        sta SPENA
+        lda sdmsb
+        ldy sdhxh
+        beq sdd10
+        ora #2
+sdd10   sta MSBX
+        ldx #0                  ; did a slime ball land on the hunter?
+sdh1    lda sd_a,x
+        beq sdh9
+        lda sd_y,x
+        cmp #192
+        bcc sdh9
+        cmp #228
+        bcs sdh9
+        lda sd_c,x
+        tay
+        lda sdx_lo,y
+        sta d1l
+        lda sdx_hi,y
+        sta d1h
+        lda sdhxl
+        sta d2l
+        lda sdhxh
+        sta d2h
+        stx sdt2
+        jsr absdiff
+        ldx sdt2
+        cmp #19
+        bcc sdover
+sdh9    inx
+        cpx #6
+        bne sdh1
+        jmp sdloop
+
+sdover  lda sdsch               ; new best?
+        cmp sdbsh
+        bcc sdo1
+        bne sdo0
+        lda sdscl
+        cmp sdbsl
+        bcc sdo1
+sdo0    lda sdscl
+        sta sdbsl
+        lda sdsch
+        sta sdbsh
+sdo1    jsr sdscore
+        lda #2                  ; red flash
+        sta BORDER
+        ldx #12
+sdo2    jsr waitframe
+        dex
+        bne sdo2
+        lda #0
+        sta BORDER
+        lda #<sdovr
+        sta PTR
+        lda #>sdovr
+        sta PTR+1
+        jsr printstr
+        ldx #25
+sdo3    jsr waitframe           ; (don't react to the fire button that is still down)
+        dex
+        bne sdo3
+sdo4    jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        beq sdexit
+        jsr readinput
+        lda inf
+        beq sdo4
+        jmp sdnew
+
+sdexit  lda #0
+        sta SPENA
+        sta MSBX
+        jsr sprreset
+        lda #0
+        sta BORDER
+        sta BGCOL
+sdx1    jsr waitframe           ; wait until RUN/STOP is let go (the menu would quit)
+        lda KEYPRESS
+        cmp #64
+        bne sdx1
+        lda #0
+        sta KEYBUF
+        jmp title
+
+
 waitframe                       ; wait for one full frame (raster line 248)
         lda RASTER
         cmp #$f8
@@ -7168,6 +7546,7 @@ nm_map
         .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
 sprreset                        ; all sprites back to their game set-up
         lda #spr_ghost/64
         sta SPRPTR
