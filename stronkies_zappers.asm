@@ -5882,7 +5882,7 @@ slimedodge
         sta D011
         lda #$1e
         sta D018
-        jsr sethome             ; the menu tune keeps playing
+        jsr sidclr              ; the menu tune stops, the game has its own sounds
 sdnew   lda #0
         sta SPENA
         ldx #0
@@ -5993,6 +5993,8 @@ sdl2    inc sdlt                ; every 3 seconds a bit faster, more slime
         cmp #8
         bcs sdl3
         inc sdlv
+        ldy #2                  ; faster: chirp
+        jsr sfx
 sdl3    lda sdlv
         lsr
         clc
@@ -6015,6 +6017,8 @@ sdl3    lda sdlv
         sta sdsch
         cld
         jsr sdscore
+        ldy #0                  ; tick
+        jsr sfx
 sdl4    ldx #0                  ; the slime balls
 sdb1    lda sd_a,x
         bne sdfall
@@ -6043,6 +6047,8 @@ sdfall  clc
         bcc sdbn
         lda #0
         sta sd_a,x
+        ldy #1                  ; dodged: plip
+        jsr sfx
         jsr sdrnd
         and #31
         clc
@@ -6131,6 +6137,8 @@ sdo0    lda sdscl
         lda sdsch
         sta sdbsh
 sdo1    jsr sdscore
+        ldy #3                  ; slimed: boom
+        jsr sfx
         lda #2                  ; red flash
         sta BORDER
         ldx #12
@@ -6170,10 +6178,25 @@ sdx1    jsr waitframe           ; wait until RUN/STOP is let go (the menu would 
         bne sdx1
         lda #0
         sta KEYBUF
-        lda bmret
-        beq sdx2
-        jmp bonusmenu
-sdx2    jmp title
+        jmp title               ; main menu: the tune starts again there
+
+; ---- mini game sound effects: Y = 0 pip, 1 plip, 2 chirp, 3 boom, 4 buzz, 5 whack
+sfx     lda #0
+        sta SID+4               ; gate off: the envelope starts again
+        sta SID+6
+        lda sfxad,y
+        sta SID+5
+        lda sfxfl,y
+        sta SID
+        lda sfxfh,y
+        sta SID+1
+        lda sfxct,y
+        sta SID+4
+        rts
+sfxad   .byte $04,$05,$06,$09,$08,$04
+sfxfl   .byte $00,$00,$00,$00,$00,$00
+sfxfh   .byte $30,$1c,$48,$0c,$06,$20
+sfxct   .byte $11,$11,$21,$81,$21,$81
 
 
 
@@ -11478,7 +11501,7 @@ ghostwhack
         sta D011
         lda #$1e
         sta D018
-        jsr sethome             ; the menu tune keeps playing
+        jsr sidclr              ; the menu tune stops, the game has its own sounds
 gwnew   lda #0
         sta SPENA
         ldx #0
@@ -11608,19 +11631,24 @@ gwfire  lda inf
         sta gw_fp
         lda gw_ph               ; a ghost is up and the cursor is on it?
         cmp #1
-        bne gwphase
+        bne gwmiss
         jsr gwidx
         cmp gw_g
-        bne gwphase
+        bne gwmiss
         inc gw_hit              ; zapped!
         lda #2
         sta gw_ph
         lda #10
         sta gw_t
         jsr gwboom
+        ldy #5                  ; whack
+        jsr sfx
         ldx gw_g
         jsr gwblk
         jsr gwhud
+        jmp gwphase
+gwmiss  ldy #4                  ; missed: buzz
+        jsr sfx
         jmp gwphase
 gwf0    lda #0
         sta gw_fp
@@ -11653,6 +11681,8 @@ gwpk    jsr sdrnd               ; next window (never the same twice)
 gwpk1   cmp gw_g
         beq gwpk
         sta gw_g
+        ldy #1                  ; a ghost pops up
+        jsr sfx
         jsr gwghost
         ldx gw_g
         jsr gwblk
@@ -11672,7 +11702,9 @@ gwover  lda gw_hit              ; round over
         cmp gw_best
         bcc gwo1
         sta gw_best
-gwo1    lda #<gwres
+gwo1    ldy #2                  ; round over: chirp
+        jsr sfx
+        lda #<gwres
         sta PTR
         lda #>gwres
         sta PTR+1
