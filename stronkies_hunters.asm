@@ -15,7 +15,7 @@ STORYN = 35
 ;            Every place has its own colours, boss shape, boss attack
 ;            list (bs_pat) and boss attack speed (bs_int).
 ;            Ghost types: fast, splitter (shrinks on the first hit), dodger.
-;            Weather per place: rain, lightning, fog, wind, thunderstorm.
+;            Weather per place: rain, lightning, fog, thunderstorm.
 ;            A warning screen announces every boss.
 ;  Cheat:    type GHOST in the main menu (test mode, no Hall of Fame).
 ;
@@ -3334,8 +3334,7 @@ doright clc
         lda pxh
         adc #0
         sta pxh
-notright jsr windpush            ; (JFK) gusts push the hunter
-        jsr powupd                ; falling power-up
+notright jsr powupd                ; falling power-up
 
         lda COLLISION           ; hardware sprite collisions (read once)
         sta col
@@ -3690,7 +3689,7 @@ nomus
         bne gcont
         jmp gameover
 gcont
-bodyend jsr weather              ; rain, wind streaks, lightning, fog
+bodyend jsr weather              ; rain, lightning, fog
         jsr hunteranim          ; walk / shoot frame of the hunter
         jsr splits
         jmp gframe
@@ -9481,10 +9480,10 @@ gk3     sta SPRPTR
         rts
 
 ; ---------------------------------------------------------------------
-;  WEATHER per place (th_wx bits): 1 rain  2 lightning  4 fog  8 wind
-;  Harlem rain, Manhattan lightning, Harbor fog, JFK wind, Statue storm
+;  WEATHER per place (th_wx bits): 1 rain  2 lightning  4 fog
+;  Harlem rain, Manhattan lightning, Harbor fog, JFK rain, Statue storm
 ; ---------------------------------------------------------------------
-th_wx   .byte 1,2,4,8,3
+th_wx   .byte 1,2,4,1,3
 wxm     .byte 0
 skycol  .byte 0
 ltim    .byte 100
@@ -9551,11 +9550,7 @@ wx3     lda wxm
         and #1
         beq wx4
         jsr raindrops
-wx4     lda wxm
-        and #8
-        beq wx5
-        jsr windstr
-wx5     rts
+wx4     rts
 
 dpos                            ; X = drop: PTR = its screen cell
         ldy rny,x
@@ -9617,67 +9612,6 @@ rd_d    jsr ddraw
 rd_n    dex
         bpl rd_l
         rts
-
-windstr
-        lda #29                 ; horizontal dashes glyph
-        sta dglyph
-        lda #15
-        sta dcol
-        ldx #5
-ws_l    jsr derase
-        dec rnx,x
-        bpl ws_d
-        lda #39
-        sta rnx,x
-        lda OSC3
-        and #7
-        clc
-        adc #3
-        sta rny,x
-ws_d    jsr ddraw
-        dex
-        bpl ws_l
-        rts
-
-windpush                        ; JFK: every 4th frame of a gust the hunter is pushed 1 pixel
-        lda wxm
-        and #8
-        beq wp_r
-        lda ph
-        bpl wp_r                ; (calm for half of the time)
-        and #3
-        cmp #3
-        bne wp_r
-        lda ph
-        and #$40
-        bne wp_right
-        lda pxh                 ; left
-        bne wp_l2
-        lda pxl
-        cmp #31
-        bcc wp_r
-wp_l2   sec
-        lda pxl
-        sbc #1
-        sta pxl
-        lda pxh
-        sbc #0
-        sta pxh
-        rts
-wp_right
-        lda pxh
-        beq wp_r2
-        lda pxl
-        cmp #44
-        bcs wp_r
-wp_r2   clc
-        lda pxl
-        adc #1
-        sta pxl
-        lda pxh
-        adc #0
-        sta pxh
-wp_r    rts
 
 ; ---------------------------------------------------------------------
 ;  BOSS WARNING SCREEN: flashing border, siren and "BOSS INCOMING"
