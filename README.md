@@ -112,10 +112,10 @@ The final release is in `v1.26`. Older releases (`v1.0` to `v1.25`) and earlier 
 | v1.20 | New ending: skippable fireworks, skyline status screen with tally and rank, waving hunter, victory fanfare, credits as skyline pages (real C64 OK) |
 | v1.21 | Smaller slime ball to match the smaller ghosts (real C64 OK) |
 | v1.22 | Mini games stop the music and have their own sound effects; quitting returns to the main menu and the tune restarts (real C64 OK) |
-| v1.23 | Dark blue sky and a black parallax city in every city part, weather effects kept (emulator-tested) |
-| v1.24 | Memory tidy-up: all text screens in the compact script format, shared screen-clear routine (about 600 bytes freed), Slime Dodge BEST label fixed (emulator-tested) |
-| v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (emulator-tested) |
-| v1.26 | Power-up info page: small icons, drop rates removed (emulator-tested) |
+| v1.23 | Dark blue sky and a black parallax city in every city part, weather effects kept (real C64 OK) |
+| v1.24 | Memory tidy-up: all text screens in the compact script format, shared screen-clear routine (about 600 bytes freed), Slime Dodge BEST label fixed (real C64 OK) |
+| v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (real C64 OK) |
+| v1.26 | Power-up info page: small icons, drop rates removed (real C64 OK) |
 
 ## Credits
 
