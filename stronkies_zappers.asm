@@ -1,4 +1,4 @@
-CODEORG = $74b0
+CODEORG = $7200
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -80,6 +80,7 @@ SPRPTR      = $07f8
 CHARSET     = $3800
 PTR         = $fb                   ; zero page pointers
 PTR2        = $fd
+ishad       = $c800                 ; intro scroller shadow row (320 bytes, free RAM in bank 3)
 PMAX        = 160                   ; blaster power: full
 PUNLOCK     = 80                    ; overheated blaster works again from here
 PDRAIN      = 2                     ; power used per frame of firing
@@ -93,7 +94,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$32,$39,$38,$37,$32,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$32,$39,$31,$38,$34,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -1360,42 +1361,19 @@ skyrow7
         .byte 64,192,221,219,192,192,192,92,64,91,91,32,220,192,224,192
         .byte 221,224,221,192,224,128,155,128,219,192,192,219,32,224,219,32
 
-; ghost floating paths (sine tables)
-sintab_x
-        .byte 120,123,126,129,132,135,138,141,143,146,149,152,155,158,160,163
-        .byte 166,169,171,174,177,179,182,184,187,189,191,194,196,198,201,203
-        .byte 205,207,209,211,213,215,216,218,220,221,223,224,226,227,228,230
-        .byte 231,232,233,234,235,236,236,237,238,238,239,239,239,240,240,240
-        .byte 240,240,240,240,239,239,239,238,238,237,236,236,235,234,233,232
-        .byte 231,230,228,227,226,224,223,221,220,218,216,215,213,211,209,207
-        .byte 205,203,201,198,196,194,191,189,187,184,182,179,177,174,171,169
-        .byte 166,163,160,158,155,152,149,146,143,141,138,135,132,129,126,123
-        .byte 120,117,114,111,108,105,102,99,97,94,91,88,85,82,80,77
-        .byte 74,71,69,66,63,61,58,56,53,51,49,46,44,42,39,37
-        .byte 35,33,31,29,27,25,24,22,20,19,17,16,14,13,12,10
-        .byte 9,8,7,6,5,4,4,3,2,2,1,1,1,0,0,0
-        .byte 0,0,0,0,1,1,1,2,2,3,4,4,5,6,7,8
-        .byte 9,10,12,13,14,16,17,19,20,22,24,25,27,29,31,33
-        .byte 35,37,39,42,44,46,49,51,53,56,58,61,63,66,69,71
-        .byte 74,77,80,82,85,88,91,94,97,99,102,105,108,111,114,117
-sintab_y
-        .byte 116,117,117,118,118,119,120,120,121,121,122,123,123,124,124,125
-        .byte 126,126,127,127,128,128,129,129,130,130,131,131,132,132,133,133
-        .byte 134,134,135,135,135,136,136,136,137,137,137,138,138,138,139,139
-        .byte 139,139,140,140,140,140,140,140,141,141,141,141,141,141,141,141
-        .byte 141,141,141,141,141,141,141,141,141,140,140,140,140,140,140,139
-        .byte 139,139,139,138,138,138,137,137,137,136,136,136,135,135,135,134
-        .byte 134,133,133,132,132,131,131,130,130,129,129,128,128,127,127,126
-        .byte 126,125,124,124,123,123,122,121,121,120,120,119,118,118,117,117
-        .byte 116,115,115,114,114,113,112,112,111,111,110,109,109,108,108,107
-        .byte 106,106,105,105,104,104,103,103,102,102,101,101,100,100,99,99
-        .byte 98,98,97,97,97,96,96,96,95,95,95,94,94,94,93,93
-        .byte 93,93,92,92,92,92,92,92,91,91,91,91,91,91,91,91
-        .byte 91,91,91,91,91,91,91,91,91,92,92,92,92,92,92,93
-        .byte 93,93,93,94,94,94,95,95,95,96,96,96,97,97,97,98
-        .byte 98,99,99,100,100,101,101,102,102,103,103,104,104,105,105,106
-        .byte 106,107,108,108,109,109,110,111,111,112,112,113,114,114,115,115
-
+; ghost floating paths: quarter sine waves (see sinx / siny)
+qsx
+        .byte 0,3,6,9,12,15,18,21,23,26,29,32,35,38,40,43
+        .byte 46,49,51,54,57,59,62,64,67,69,71,74,76,78,81,83
+        .byte 85,87,89,91,93,95,96,98,100,101,103,104,106,107,108,110
+        .byte 111,112,113,114,115,116,116,117,118,118,119,119,119,120,120,120
+        .byte 120
+qsy
+        .byte 0,1,1,2,2,3,4,4,5,5,6,7,7,8,8,9
+        .byte 10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17
+        .byte 18,18,19,19,19,20,20,20,21,21,21,22,22,22,23,23
+        .byte 23,23,24,24,24,24,24,24,25,25,25,25,25,25,25,25
+        .byte 25
 gtilecodes
         .byte 64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79
         .byte 80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95
@@ -1675,6 +1653,12 @@ ig1     lda ighost,x            ; (in VIC bank 3, data at $c400 / $c440)
         sta PTR
         lda #>istrip
         sta PTR+1
+        ldy #0                  ; clear the scroller's shadow row
+        tya
+isz     sta ishad,y
+        sta ishad+256,y
+        iny
+        bne isz
         lda #7
         sta iscx
 iloop   lda RASTER              ; fine scroll only for the bottom text row
@@ -1791,27 +1775,6 @@ iscw    lda #<istrip            ; end of text: start again
         sta PTR+1
 isc5    rts
 iscx    .byte 0
-ishad
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 iwait   lda RASTER              ; one frame (own copy: game code is parked)
         cmp #$f8
@@ -2362,7 +2325,7 @@ rg3     lda rgoff               ; flying away to the right
         bcc rgpos
         jmp rgkill
 rgpos   ldx rgpx
-        lda sintab_x,x
+        jsr sinx
         clc
         adc #30
         sta rgxl
@@ -2379,7 +2342,7 @@ rgpos   ldx rgpx
         lda rgxl
         sta bxl                 ; (copied to sprite 5 each frame)
         ldx rgpy
-        lda sintab_y,x
+        jsr siny
         sec
         sbc #91
         asl
@@ -3347,14 +3310,14 @@ bossanim
         inc ph2
         inc ph2
         ldx ph
-        lda sintab_x,x
+        jsr sinx
         lsr
         lsr
         clc
         adc #130
         sta VIC+10
         ldx ph2
-        lda sintab_y,x
+        jsr siny
         lsr
         clc
         adc #53
@@ -3415,14 +3378,14 @@ titleanim
         inc ph2
         inc ph2
         ldx ph
-        lda sintab_x,x
+        jsr sinx
         lsr
         lsr
         clc
         adc #130
         sta VIC
         ldx ph2
-        lda sintab_y,x
+        jsr siny
         lsr
         clc
         adc #24
@@ -3693,15 +3656,15 @@ gn0     jsr powerupdate          ; blaster power: drain / recharge
         inc ph2
 ph2ok   jsr gtmove              ; ghost type: faster / dodging
         ldx ph
+        jsr sinx                ; X = 50..290 (9 bit)
         clc
-        lda sintab_x,x          ; X = 50..290 (9 bit)
         adc #50
         sta gxl
         lda #0
         adc #0
         sta gxh
         ldx ph2
-        lda sintab_y,x          ; Y = 91..141
+        jsr siny                ; Y = 91..141
         sta gy
 
         lda inl                 ; move left
@@ -6775,42 +6738,48 @@ bmscr
         .byte 1,14,7
         .text "BONUS GAMES"
         .byte 0
-        .byte 3,7,14
-        .text "PICK A GAME AND PRESS FIRE"
-        .byte 0
-        .byte 5,9,15
+        .byte 3,9,15
         .text "SLIME DODGE"
         .byte 0
-        .byte 6,9,11
+        .byte 4,9,11
         .text "DODGE THE FALLING SLIME"
         .byte 0
-        .byte 5,27,7
+        .byte 3,27,7
         .text "BEST 0000"
         .byte 0
-        .byte 8,9,15
+        .byte 6,9,15
         .text "GHOST WHACK"
         .byte 0
-        .byte 9,9,11
+        .byte 7,9,11
         .text "ZAP GHOSTS IN THE WINDOWS"
         .byte 0
-        .byte 8,27,7
+        .byte 6,27,7
         .text "BEST 00"
         .byte 0
-        .byte 11,9,15
+        .byte 9,9,15
         .text "MEMORY GHOSTS"
         .byte 0
-        .byte 12,9,11
+        .byte 10,9,11
         .text "REPEAT THE GHOST NOTES"
         .byte 0
-        .byte 11,27,7
+        .byte 9,27,7
         .text "BEST 00"
+        .byte 0
+        .byte 12,9,15
+        .text "GHOST INVADERS"
+        .byte 0
+        .byte 13,9,11
+        .text "STOP THE GHOST INVASION"
+        .byte 0
+        .byte 12,27,7
+        .text "BEST 0000"
         .byte 0
         .byte 14,7,12
         .text "FIRE: PLAY    RUN/STOP: BACK"
         .byte 0
         .byte $ff
-bmlo    .byte $ce,$46,$be
-bmhi    .byte $04,$05,$05
+bmlo    .byte $7e,$f6,$6e,$e6
+bmhi    .byte $04,$04,$05,$05
 bmsel   .byte 0
 bmret   .byte 0
 bm_fp   .byte 0
@@ -6824,7 +6793,7 @@ bmdraw  lda ph                  ; the chosen game blinks
         bne bd_b
 bd_a    lda #1
 bd_b    sta bm_bl
-        ldx #2
+        ldx #3
 bd1     lda bmlo,x
         sta PTR
         sta PTR2
@@ -6864,25 +6833,32 @@ bonusmenu
         lda #>bmscr
         sta PTR+1
         jsr drawscript
-        lda #<(SCREEN+5*40+32)
+        lda #<(SCREEN+3*40+32)
         sta PTR
-        lda #>(SCREEN+5*40+32)
+        lda #>(SCREEN+3*40+32)
         sta PTR+1
         lda sdbsh
         ldx sdbsl
         jsr put4
-        lda #<(SCREEN+8*40+32)
+        lda #<(SCREEN+6*40+32)
         sta PTR
-        lda #>(SCREEN+8*40+32)
+        lda #>(SCREEN+6*40+32)
         sta PTR+1
         lda gw_best
         jsr put2bin
-        lda #<(SCREEN+11*40+32)
+        lda #<(SCREEN+9*40+32)
         sta PTR
-        lda #>(SCREEN+11*40+32)
+        lda #>(SCREEN+9*40+32)
         sta PTR+1
         lda mm_best
         jsr put2bin
+        lda #<(SCREEN+12*40+32)
+        sta PTR
+        lda #>(SCREEN+12*40+32)
+        sta PTR+1
+        lda iv_bsh
+        ldx iv_bsl
+        jsr put4
         lda #$5b                ; screen on
         sta D011
         lda #1
@@ -6927,7 +6903,7 @@ bm_u    lda bmsel
         dec bmsel
         jmp bm_s
 bm_d    lda bmsel
-        cmp #2
+        cmp #3
         bcs bm_s
         inc bmsel
 bm_s    lda #8
@@ -6943,7 +6919,10 @@ bm_f    lda inf
         beq bm_g0
         cpx #1
         beq bm_g1
-        jmp memghosts
+        cpx #2
+        beq bm_g2
+        jmp ghostinv
+bm_g2   jmp memghosts
 bm_g0   jmp slimedodge
 bm_g1   jmp ghostwhack
 bm_f0   lda #0
@@ -7227,6 +7206,393 @@ tfade   .byte $ff
 ;  to black and the game starts again with the logo screen.
 ; ---------------------------------------------------------------------
 credits jmp credpages          ; skyline pages (see the end of the file)
+
+; ---------------------------------------------------------------------
+;  MINI GAME: GHOST INVADERS  (bonus games page)
+;  Two rows of five ghosts (the game's own ghost sprites: sprites 3-7 are
+;  shown twice per frame, the second row is set up by raster polling)
+;  sweep over the New York skyline and come down; slime falls back.
+; ---------------------------------------------------------------------
+ivcx    .byte 0,36,72,108,144,0,36,72,108,144
+ivry    .byte 0,0,0,0,0,28,28,28,28,28
+ivbit   .byte 1,2,4,8,16,32,64,128
+iv_al   .byte 1,1,1,1,1,1,1,1,1,1
+iv_fx   .byte 0                 ; formation: x, direction, y, speed, ghosts left
+iv_dir  .byte 0
+iv_fy   .byte 0
+iv_spd  .byte 1
+iv_n    .byte 0
+iv_hx   .byte 0                 ; hunter x (0-230, the sprite is at x+56)
+iv_bx   .byte 0                 ; beam shot
+iv_by   .byte 0
+iv_ba   .byte 0
+iv_sx   .byte 0                 ; slime ball
+iv_sy   .byte 0
+iv_sa   .byte 0
+iv_tm   .byte 0
+iv_lv   .byte 0
+iv_wv   .byte 0
+iv_inv  .byte 0
+iv_ph   .byte 0
+iv_scl  .byte 0
+iv_sch  .byte 0
+iv_bsl  .byte 0
+iv_bsh  .byte 0
+iv_t    .byte 0
+iv_y    .byte 0
+iv_m    .byte 0
+iv_h    .byte 0
+iv_l    .byte 0
+iv_b0   .byte 0
+iv_c    .byte 0
+
+ghostinv
+        jsr sidclr              ; the tune stops, the game has its own sounds
+ivnew   jsr skyscreen
+        lda #<ivscr
+        sta PTR
+        lda #>ivscr
+        sta PTR+1
+        jsr drawscript
+        jsr sprreset
+        lda #0
+        sta iv_scl
+        sta iv_sch
+        sta iv_ba
+        sta iv_sa
+        sta iv_inv
+        sta KEYBUF
+        lda #3
+        sta iv_lv
+        lda #1
+        sta iv_wv
+        lda #100
+        sta iv_hx
+        lda #40
+        sta iv_tm
+        lda RASTER
+        ora #1
+        sta sdseed
+        jsr ivwave
+        jsr ivhud
+        lda #spr_player/64
+        sta SPRPTR
+        lda #spr_beam/64
+        sta SPRPTR+1
+        lda #spr_orb/64
+        sta SPRPTR+2
+        lda #8
+        sta SPCOL
+        lda #7
+        sta SPCOL+1
+        lda #13
+        sta SPCOL+2
+        lda #0
+        sta SPMC
+        sta $d01b
+        lda #$ff
+        sta SPENA
+        lda #$5b
+        sta D011
+ivloop  jsr waitframe
+        inc iv_ph
+        lda KEYPRESS
+        cmp #63
+        bne ivk
+        jmp sdexit
+ivk     jsr readinput
+        lda inl                 ; the hunter walks 3 pixels a frame
+        beq iv1
+        lda iv_hx
+        cmp #3
+        bcc iv1
+        sbc #3
+        sta iv_hx
+iv1     lda inr
+        beq iv2
+        lda iv_hx
+        cmp #228
+        bcs iv2
+        adc #3
+        sta iv_hx
+iv2     lda inf                 ; fire: one beam shot at a time
+        beq iv3
+        lda iv_ba
+        bne iv3
+        lda iv_hx
+        sta iv_bx
+        lda #190
+        sta iv_by
+        lda #1
+        sta iv_ba
+        ldy #0
+        jsr sfx
+iv3     lda iv_ba               ; the shot flies up
+        beq ivb9
+        lda iv_by
+        sec
+        sbc #5
+        sta iv_by
+        cmp #54
+        bcs ivc0
+        lda #0
+        sta iv_ba
+        beq ivb9
+ivc0    ldx #9                  ; did it touch a ghost?
+ivc1    lda iv_al,x
+        beq ivc3
+        lda iv_fx
+        clc
+        adc ivcx,x
+        sec
+        sbc iv_bx
+        bcs ivc2
+        eor #$ff
+        adc #1
+ivc2    cmp #14
+        bcs ivc3
+        lda iv_fy
+        clc
+        adc ivry,x
+        sec
+        sbc iv_by
+        bcs ivc4
+        eor #$ff
+        adc #1
+ivc4    cmp #18
+        bcs ivc3
+        lda #0                  ; hit
+        sta iv_al,x
+        sta iv_ba
+        dec iv_n
+        ldy #5
+        jsr sfx
+        lda #$10
+        jsr ivscore
+        jmp ivb9
+ivc3    dex
+        bpl ivc1
+ivb9    lda iv_n                ; wave cleared?
+        bne ivw9
+        lda #0
+        sta iv_ba
+        sta iv_sa
+        lda iv_wv
+        cmp #9
+        bcs ivw8
+        inc iv_wv
+ivw8    jsr ivwave
+        lda #$50
+        jsr ivscore
+        ldy #2
+        jsr sfx
+ivw9    lda iv_dir              ; the formation sweeps sideways
+        bne ivl
+        lda iv_fx
+        clc
+        adc iv_spd
+        sta iv_fx
+        cmp #87
+        bcc ivm9
+        lda #87
+        sta iv_fx
+        lda #1
+        sta iv_dir
+        bne ivdn
+ivl     lda iv_fx
+        sec
+        sbc iv_spd
+        sta iv_fx
+        bcs ivm9
+        lda #0
+        sta iv_fx
+        sta iv_dir
+ivdn    lda iv_fy               ; ... and comes down at the edges
+        clc
+        adc #6
+        sta iv_fy
+        cmp #150
+        bcc ivm9
+        jmp ivover
+ivm9    lda iv_sa               ; slime
+        bne ivs1
+        dec iv_tm
+        beq ivs8
+        jmp ivs9
+ivs8    lda iv_wv
+        asl
+        asl
+        sta iv_t
+        lda #100
+        sec
+        sbc iv_t
+        sta iv_tm
+        jsr sdrnd
+        and #15
+        cmp #10
+        bcc ivs0
+        sbc #10
+ivs0    tax
+ivs0a   lda iv_al,x
+        bne ivs0b
+        inx
+        cpx #10
+        bcc ivs0a
+        ldx #0
+        beq ivs0a
+ivs0b   lda iv_fx
+        clc
+        adc ivcx,x
+        sta iv_sx
+        lda iv_fy
+        clc
+        adc ivry,x
+        adc #12
+        sta iv_sy
+        lda #1
+        sta iv_sa
+        bne ivs9
+ivs1    lda iv_sy
+        clc
+        adc #3
+        sta iv_sy
+        cmp #240
+        bcc ivs2
+        lda #0
+        sta iv_sa
+        beq ivs9
+ivs2    cmp #196
+        bcc ivs9
+        lda iv_sx
+        sec
+        sbc iv_hx
+        bcs ivs3
+        eor #$ff
+        adc #1
+ivs3    cmp #17
+        bcs ivs9
+        lda iv_inv
+        bne ivs9
+        lda #0                  ; slimed
+        sta iv_sa
+        dec iv_lv
+        lda #70
+        sta iv_inv
+        jsr ivhud
+        ldy #3
+        jsr sfx
+        lda iv_lv
+        bne ivs9
+        jmp ivover
+ivs9    lda iv_inv
+        beq ivd0
+        dec iv_inv
+ivd0    lda #0                  ; ---- the sprites
+        sta iv_m
+        lda iv_hx
+        ldx #0
+        ldy #213
+        jsr setspr
+        lda #8
+        ldy iv_inv
+        beq ivd1
+        tya
+        and #4
+        beq ivd1
+        lda #1
+ivd1    sta SPCOL
+        lda iv_bx
+        ldy #0
+        ldx iv_ba
+        beq ivd2
+        ldy iv_by
+ivd2    ldx #1
+        jsr setspr
+        lda iv_sx
+        ldy #0
+        ldx iv_sa
+        beq ivd3
+        ldy iv_sy
+ivd3    ldx #2
+        jsr setspr
+        lda iv_m
+        sta iv_h
+        ldx #0
+        jsr ivband              ; first row of ghosts
+        lda iv_fy
+        clc
+        adc #23
+        sta iv_l
+ivr0    lda RASTER              ; (into the next frame, the first row has been drawn)
+        cmp #60
+        bcs ivr0
+ivr1    lda RASTER
+        cmp iv_l
+        bcc ivr1
+        lda iv_h
+        sta iv_m
+        ldx #5
+        jsr ivband              ; second row of ghosts
+        jmp ivloop
+
+ivovr
+        .byte 6,15,2
+        .text "GAME OVER"
+        .byte 0
+        .byte 8,14,1
+        .text "SCORE"
+        .byte 0
+        .byte 8,20,7
+        .text "0000"
+        .byte 0
+        .byte 9,14,1
+        .text "BEST"
+        .byte 0
+        .byte 9,20,7
+        .text "0000"
+        .byte 0
+        .byte 11,6,12
+        .text "FIRE: AGAIN   RUN/STOP: MENU"
+        .byte 0
+        .byte $ff
+
+; ---- sine paths from quarter waves: X = phase 0-255 -> A (X is kept, Y too)
+sxs     .byte 0
+sq      txa                     ; A = 0-64 (position in the quarter), C = 1 in the second half
+        cmp #128
+        php
+        and #$7f
+        cmp #65
+        bcc sq1
+        eor #$7f
+        clc
+        adc #1
+sq1     plp
+        rts
+sinx    stx sxs                 ; 120 +/- 120 * sin
+        jsr sq
+        tax
+        bcs sx1
+        lda qsx,x
+        adc #120
+        ldx sxs
+        rts
+sx1     lda #120
+        sbc qsx,x
+        ldx sxs
+        rts
+siny    stx sxs                 ; 116 +/- 25 * sin
+        jsr sq
+        tax
+        bcs sy1
+        lda qsy,x
+        adc #116
+        ldx sxs
+        rts
+sy1     lda #116
+        sbc qsy,x
+        ldx sxs
+        rts
 
 ; ---- skill setting (menu item) and combo scoring
 dflives .byte 5,3,2             ; lives at the start
@@ -12065,3 +12431,185 @@ crp3    .byte 4,16,7
         .byte 10,10,14
         .text "STAY TUNED FOR MORE"
         .byte 0,$ff
+
+; ---- Ghost Invaders (rest): RAM under BASIC
+setspr  sta iv_t                ; X = sprite, A = x (0-255, sprite at x+56), Y = y
+        sty iv_y
+        txa
+        asl
+        tay
+        lda iv_t
+        clc
+        adc #56
+        sta VIC,y
+        bcc ivs_1
+        lda iv_m
+        ora ivbit,x
+        sta iv_m
+ivs_1     lda iv_y
+        sta VIC+1,y
+        rts
+
+ivwave  lda #0                  ; a new wave of ten ghosts
+        sta iv_fx
+        sta iv_dir
+        ldx #9
+        lda #1
+ivq1     sta iv_al,x
+        dex
+        bpl ivq1
+        lda #10
+        sta iv_n
+        lda iv_wv
+        cmp #6
+        bcc ivq2
+        lda #5
+ivq2     asl
+        asl
+        clc
+        adc #56
+        sta iv_fy
+        lda iv_wv
+        lsr
+        clc
+        adc #1
+        cmp #4
+        bcc ivq3
+        lda #3
+ivq3     sta iv_spd
+        rts
+
+ivhud   lda #<(SCREEN+40+7)
+        sta PTR
+        lda #>(SCREEN+40+7)
+        sta PTR+1
+        lda iv_sch
+        ldx iv_scl
+        jsr put4
+        lda iv_wv
+        ora #$30
+        sta SCREEN+40+22
+        lda iv_lv
+        ora #$30
+        sta SCREEN+40+32
+        rts
+
+ivscore                         ; A = BCD points
+        sed
+        clc
+        adc iv_scl
+        sta iv_scl
+        lda iv_sch
+        adc #0
+        sta iv_sch
+        cld
+        jmp ivhud
+
+ivband  stx iv_b0               ; place ghost sprites 3-7 for the row starting at ghost X
+        lda #0
+        sta iv_c
+ivb1    lda iv_c
+        clc
+        adc iv_b0
+        tax
+        ldy #0
+        lda iv_al,x
+        beq ivb2
+        lda iv_fy
+        clc
+        adc ivry,x
+        tay
+        lda iv_fx
+        clc
+        adc ivcx,x
+        jmp ivb3
+ivb2    lda #0
+ivb3    ldx iv_c
+        inx
+        inx
+        inx
+        jsr setspr
+        lda iv_ph               ; wobbling ghosts
+        lsr
+        lsr
+        lsr
+        lsr
+        and #3
+        tay
+        lda gwf,y
+        sta SPRPTR,x
+        lda #5
+        ldy iv_b0
+        beq ivb4
+        lda #3
+ivb4    sta SPCOL,x
+        inc iv_c
+        lda iv_c
+        cmp #5
+        bcc ivb1
+        lda iv_m
+        sta MSBX
+        rts
+
+ivover  ldy #3
+        jsr sfx
+        lda iv_sch              ; new best?
+        cmp iv_bsh
+        bcc ivo1
+        bne ivo0
+        lda iv_scl
+        cmp iv_bsl
+        bcc ivo1
+ivo0    lda iv_scl
+        sta iv_bsl
+        lda iv_sch
+        sta iv_bsh
+ivo1    lda #1
+        sta SPENA
+        lda #<ivovr
+        sta PTR
+        lda #>ivovr
+        sta PTR+1
+        jsr drawscript
+        lda #<(SCREEN+8*40+20)
+        sta PTR
+        lda #>(SCREEN+8*40+20)
+        sta PTR+1
+        lda iv_sch
+        ldx iv_scl
+        jsr put4
+        lda #<(SCREEN+9*40+20)
+        sta PTR
+        lda #>(SCREEN+9*40+20)
+        sta PTR+1
+        lda iv_bsh
+        ldx iv_bsl
+        jsr put4
+        ldx #25
+ivo2    jsr waitframe           ; (don't react to the fire button that is still down)
+        dex
+        bne ivo2
+ivo3    jsr waitframe
+        lda KEYPRESS
+        cmp #63
+        bne ivo4
+        jmp sdexit
+ivo4    jsr readinput
+        lda inf
+        beq ivo3
+        jmp ivnew
+
+ivscr
+        .byte 0,13,7
+        .text "GHOST INVADERS"
+        .byte 0
+        .byte 1,1,1
+        .text "SCORE:0000"
+        .byte 0
+        .byte 1,17,1
+        .text "WAVE:1"
+        .byte 0
+        .byte 1,26,1
+        .text "LIVES:3"
+        .byte 0
+        .byte $ff

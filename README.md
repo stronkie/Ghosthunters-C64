@@ -2,7 +2,7 @@
 
 A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.26 is the current release.** It is only updated if bugs are found.
+**v1.27 is the current release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
@@ -83,7 +83,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-The final release is in `v1.26`. Older releases (`v1.0` to `v1.25`) and earlier development snapshots are in `previous-versions/`.
+The final release is in `v1.27`. Older releases (`v1.0` to `v1.26`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -116,6 +116,7 @@ The final release is in `v1.26`. Older releases (`v1.0` to `v1.25`) and earlier 
 | v1.24 | Memory tidy-up: all text screens in the compact script format, shared screen-clear routine (about 600 bytes freed), Slime Dodge BEST label fixed (real C64 OK) |
 | v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (real C64 OK) |
 | v1.26 | Power-up info page: small icons, drop rates removed (real C64 OK) |
+| v1.27 | New bonus game GHOST INVADERS (4th item); quarter-wave sine tables and intro scroller buffer moved to free RAM (emulator tested only) |
 
 ## Credits
 
