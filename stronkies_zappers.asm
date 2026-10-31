@@ -1,4 +1,4 @@
-CODEORG = $74f0
+CODEORG = $7500
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$32,$39,$39,$33,$36,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$32,$39,$39,$35,$32,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -810,6 +810,10 @@ mtimer  .byte 0
 mnote   .byte 0
 lives   .byte 0
 hits    .byte 0
+dlevel  .byte 1                ; skill: 0 easy, 1 normal, 2 hard
+cmb     .byte 0                 ; combo multiplier 1-5
+cmbt    .byte 0                 ; frames left to keep the combo going
+dfp     .byte 1                 ; fire was down (skill item of the menu)
 pact    .byte 0
 jxl     .byte 0
 jxh     .byte 0
@@ -917,38 +921,38 @@ titlescr
         .byte 1,10,14
         .text "A GHOST HUNTING GAME"
         .byte 0
-        .byte 11,3,7
+        .byte 10,3,7
         .text "HIGH SCORE"
         .byte 0
-        .byte 11,14,1
+        .byte 10,14,1
         .text "        "
         .byte 0
-        .byte 11,23,3
+        .byte 10,23,3
         .text "0000"
         .byte 0
-        .byte 11,28,7
+        .byte 10,28,7
         .text "LV"
         .byte 0
-        .byte 11,31,3
+        .byte 10,31,3
         .text "00"
         .byte 0
-        .byte 12,15,15
+        .byte 11,15,15
         .text "START GAME"
         .byte 0
-        .byte 13,14,15
+        .byte 12,14,15
         .text "BONUS GAMES"
         .byte 0
-        .byte 14,14,15
+        .byte 13,14,15
         .text "HOW TO PLAY"
         .byte 0
         .byte 24,36,11
         .text "2026"
         .byte 0
         .byte $ff
-mslo    .byte $ec,$14,$3c
-mshi    .byte $05,$06,$06
-mclo    .byte $ee,$16,$3e
-mchi    .byte $d9,$da,$da
+mslo    .byte $c4,$ec,$14,$3c
+mshi    .byte $05,$05,$06,$06
+mclo    .byte $c6,$ee,$16,$3e
+mchi    .byte $d9,$d9,$da,$da
 msel    .byte 0
 mdel    .byte 0
 hudscr
@@ -3120,6 +3124,8 @@ again2
 title   ldx spsave             ; (clean stack: games and screens end here with jmp)
         txs
         jsr rgkill
+        lda #1
+        sta dfp                 ; (a fire button that is still down does not count)
         lda #0
         sta restflag
         lda #0
@@ -3180,12 +3186,28 @@ hnob    lda scr                 ; the menu only works on the title page
         beq hgo
         cpx #1
         beq hbon
+        cpx #3
+        beq hskill
         jmp howto
 hbon    jmp bonusmenu
+hskill  lda dfp                 ; fire on the skill item: easy / normal / hard
+        bne hnf2
+        lda #1
+        sta dfp
+        ldx dlevel
+        inx
+        cpx #3
+        bcc hs1
+        ldx #0
+hs1     stx dlevel
+        jsr drawskill
+        jmp hnf2
 hfire   lda inf                 ; (the other pages: fire starts the game)
         beq hnofire
 hgo     jmp newgame
-hnofire lda key                 ; any other activity resets the idle timer
+hnofire lda #0
+        sta dfp
+hnf2    lda key                 ; any other activity resets the idle timer
         cmp #64
         bne hact
         lda joyv
@@ -3266,23 +3288,24 @@ showtitle
         sta PTR+1
         jsr drawscript
         jsr drawmenu
+        jsr drawskill
         jsr showmute
-        lda #<(SCREEN+11*40+14) ; best hunter: name + score + level
+        lda #<(SCREEN+10*40+14) ; best hunter: name + score + level
         sta PTR
-        lda #>(SCREEN+11*40+14)
+        lda #>(SCREEN+10*40+14)
         sta PTR+1
         ldx #0
         jsr putname
-        lda #<(SCREEN+11*40+23)
+        lda #<(SCREEN+10*40+23)
         sta PTR
-        lda #>(SCREEN+11*40+23)
+        lda #>(SCREEN+10*40+23)
         sta PTR+1
         lda hsh_tab
         ldx hsl_tab
         jsr put4
-        lda #<(SCREEN+11*40+31)
+        lda #<(SCREEN+10*40+31)
         sta PTR
-        lda #>(SCREEN+11*40+31)
+        lda #>(SCREEN+10*40+31)
         sta PTR+1
         lda hlv_tab
         jsr put2bin
@@ -3416,9 +3439,10 @@ titleanim
         clc
         adc #24
         sta VIC+1
-        ldy #10                 ; menu items grey, the chosen one blinks
+        ldy #12                 ; menu items grey, the chosen one blinks
         lda #15
-tm1     sta COLORRAM+12*40+14,y
+tm1     sta COLORRAM+11*40+14,y
+        sta COLORRAM+12*40+14,y
         sta COLORRAM+13*40+14,y
         sta COLORRAM+14*40+14,y
         dey
@@ -3436,7 +3460,7 @@ tm3     pha
         lda mchi,x
         sta PTR+1
         pla
-        ldy #10
+        ldy #12
 tm4     sta (PTR),y
         dey
         bpl tm4
@@ -3594,6 +3618,8 @@ newgame lda #0
         sta won
         lda #3
         sta nm_cur              ; the plane landed at JFK
+        ldx dlevel
+        lda dflives,x
         sta lives
         lda #1
         sta lvl
@@ -4081,6 +4107,7 @@ nomus
         jmp gameover
 gcont
 bodyend jsr weather              ; rain, lightning, fog
+        jsr combotick
         lda lcon                ; level-complete screen: always a black sky
         beq bd_nl
         lda #0
@@ -4114,7 +4141,7 @@ splits  jsr waitfar             ; raster 154: far skyline rows get their own fin
 gothit  jsr gtsplit             ; splitter: first hit only shrinks it
         bcc gh_n
         rts
-gh_n    lda #$10
+gh_n    jsr combo               ; quick hits in a row: 10, 20, 30 ... 50 points
         ldx #0
         jsr addscore
         inc hits                ; the ghosts get meaner
@@ -4131,7 +4158,8 @@ gh_n    lda #$10
         cld
         cli
         jsr showprog
-        lda #40                 ; 16% chance the creature drops a power-up
+        ldx dlevel              ; chance that the creature drops a power-up (16% normal)
+        lda dfdrop,x
         jsr maybedrop
         jsr showscore
         lda #$c8
@@ -4195,7 +4223,7 @@ hu_c
 
 ; next attack comes sooner as you catch ghosts in a level (80 - 6 per
 ; catch) and on higher levels; the boss attacks at a rate set per place (bs_int)
-resettimer
+rst0
         lda bstate
         cmp #1
         bne rt0
@@ -4386,6 +4414,8 @@ startlevel
         lda #0
         sta hinv
         sta lcon
+        sta cmb
+        sta cmbt
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level
@@ -4450,6 +4480,9 @@ stl1    lda #$0c
         bcc stl2
         ldx #8
 stl2    lda needtab,x
+        ldx dlevel
+        clc
+        adc dfneed,x
         sta need
         jsr calcospd
         jsr ecmon
@@ -4867,6 +4900,9 @@ calcospd
         bcc cs1
         ldx #9
 cs1     lda ospdtab,x
+        ldx dlevel
+        clc
+        adc dfspd,x
         sta ospd
         rts
 
@@ -6603,7 +6639,7 @@ dsc_5   iny
 dsc_d   rts
 
 drawmenu                        ; title menu: - marks the chosen item
-        ldx #2
+        ldx #3
 mn_1    lda mslo,x
         sta PTR
         sta PTR2
@@ -6652,7 +6688,7 @@ mn_u    lda msel
         dec msel
         jmp mn_s
 mn_d    lda msel
-        cmp #2
+        cmp #3
         bcs mn_x
         inc msel
 mn_s    lda #8
@@ -6698,7 +6734,10 @@ hwscr
         .text "MUSIC ON / OFF"
         .byte 0
         .byte 11,3,10
-        .text "DODGE THE SLIME - YOU HAVE 3 LIVES"
+        .text "DODGE THE SLIME - WATCH YOUR LIVES"
+        .byte 0
+        .byte 13,3,7
+        .text "HIT GHOSTS FAST FOR A COMBO BONUS"
         .byte 0
         .byte 12,4,13
         .text "CATCH POWER-UPS BEFORE THEY LAND"
@@ -7200,6 +7239,100 @@ tfade   .byte $ff
 ;  to black and the game starts again with the logo screen.
 ; ---------------------------------------------------------------------
 credits jmp credpages          ; skyline pages (see the end of the file)
+
+; ---- skill setting (menu item) and combo scoring
+dflives .byte 5,3,2             ; lives at the start
+dfneed  .byte $fb,0,5           ; creatures needed per level: -5, +0, +5
+dfspd   .byte $ff,0,1           ; slime speed: -1, +0, +1
+dfadd   .byte 24,0,$f6          ; frames between attacks: +24, +0, -10
+dfdrop  .byte 56,40,28          ; power-up drop chance
+dfcmb   .byte 90,60,45          ; combo window in frames
+sk_lo   .byte <sk0,<sk1,<sk2
+sk_hi   .byte >sk0,>sk1,>sk2
+sk0     .byte 14,14,15
+        .text " EASY MODE "
+        .byte 0,$ff
+sk1     .byte 14,14,15
+        .text "NORMAL MODE"
+        .byte 0,$ff
+sk2     .byte 14,14,15
+        .text " HARD MODE "
+        .byte 0,$ff
+drawskill
+        ldx dlevel
+        lda sk_lo,x
+        sta PTR
+        lda sk_hi,x
+        sta PTR+1
+        jmp drawscript
+
+resettimer                      ; next attack: the level's own rate, adjusted by the skill
+        jsr rst0
+        ldx dlevel
+        lda dfadd,x
+        beq rs9
+        clc
+        adc stimer
+        cmp #8
+        bcs rs8
+        lda #8
+rs8     sta stimer
+rs9     rts
+
+combo                           ; a ghost was hit: A = points (BCD 10 ... 50)
+        lda cmbt
+        beq cb0
+        lda cmb
+        cmp #5
+        bcs cb1
+        inc cmb
+        bne cb1
+cb0     lda #1
+        sta cmb
+cb1     ldx dlevel              ; time to hit the next one: 1.8 / 1.2 / 0.9 seconds
+        lda dfcmb,x
+        sta cmbt
+        jsr showcombo
+        lda cmb
+        asl
+        asl
+        asl
+        asl
+        rts
+
+showcombo
+        lda cmb
+        cmp #2
+        bcc cm9
+        ldx #6
+cm1     lda cbtxt,x
+        and #$3f
+        sta SCREEN+2*40+2,x
+        lda #7
+        sta COLORRAM+2*40+2,x
+        dex
+        bpl cm1
+        lda cmb
+        ora #$30
+        sta SCREEN+2*40+9
+        lda #7
+        sta COLORRAM+2*40+9
+cm9     rts
+cbtxt   .text "COMBO X"
+
+combotick
+        lda cmbt
+        beq cm3
+        dec cmbt
+        bne cm3
+        lda #0
+        sta cmb
+        lda #$20
+        ldx #7
+cm2     sta SCREEN+2*40+2,x
+        dex
+        bpl cm2
+cm3     rts
 chkskip lda JOY                 ; C=1 when fire or a key is pressed
         and #$10
         beq cks_y
@@ -7255,13 +7388,18 @@ wintally
         lda #>wintxt
         sta PTR+1
         jsr drawscript
-        ldx #0                  ; rank from the lives left
+        ldx dlevel              ; rank from the lives lost
+        lda dflives,x
+        sta crcnt
+        ldx #0
         lda lives
-        cmp #3
+        cmp crcnt
         bcs wt_r
         ldx #1
-        cmp #2
-        beq wt_r
+        clc
+        adc #1
+        cmp crcnt
+        bcs wt_r
         ldx #2
 wt_r    lda wrlo,x
         sta PTR

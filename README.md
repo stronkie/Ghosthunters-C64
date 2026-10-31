@@ -2,7 +2,7 @@
 
 A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.24 is the current release.** It is only updated if bugs are found.
+**v1.25 is the current release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
@@ -36,12 +36,14 @@ Use the `.d64` if you want your high scores saved: the Hall of Fame is written b
 
 ## How to play
 
-1. Catch the ghosts floating over the skyline with your proton beam. Dodge their slime: you have 3 lives.
-2. Your blaster has a power meter. It drains while you fire, and when it overheats you must wait for it to recharge. Collect power-ups that drop from caught ghosts and bosses.
-3. Fill the quota of a level and the **boss** of that district appears. Hit it three times to stun it, then drop the trap and suck it in.
-4. After each boss, a map of New York shows your next stop. Cleared places blink and are skipped.
-5. Clear **Harlem, Manhattan, Harbor and JFK** to win. The Statue of Liberty is optional.
-6. Winning gives a fireworks show, a **1000 point bonus per life left**, a flight back to Amsterdam, and a place in the Hall of Fame.
+1. Catch the ghosts floating over the skyline with your proton beam. Dodge their slime: you start with 3 lives (5 on Easy, 2 on Hard).
+2. Hit ghosts quickly one after another for a combo: 10, 20, 30, 40 and up to 50 points per ghost. The time window per hit is shorter on Hard and longer on Easy.
+3. Your blaster has a power meter. It drains while you fire, and when it overheats you must wait for it to recharge. Collect power-ups that drop from caught ghosts and bosses.
+4. Fill the quota of a level and the **boss** of that district appears. Hit it three times to stun it, then drop the trap and suck it in.
+5. After each boss, a map of New York shows your next stop. Cleared places blink and are skipped.
+6. Clear **Harlem, Manhattan, Harbor and JFK** to win. The Statue of Liberty is optional.
+7. Winning gives a fireworks show, a **1000 point bonus per life left**, a flight back to Amsterdam, and a place in the Hall of Fame.
+8. Pick **EASY MODE / NORMAL MODE / HARD MODE** in the main menu (move to the last item and press fire). It changes the starting lives, the quota per level, the slime speed, how often ghosts attack and how often power-ups drop. Your rank at the end counts the lives you lost compared with the mode's starting lives.
 
 ## The five places
 
@@ -81,7 +83,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-The final release is in `v1.24`. Older releases (`v1.0` to `v1.23`) and earlier development snapshots are in `previous-versions/`.
+The final release is in `v1.25`. Older releases (`v1.0` to `v1.24`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -112,6 +114,7 @@ The final release is in `v1.24`. Older releases (`v1.0` to `v1.23`) and earlier 
 | v1.22 | Mini games stop the music and have their own sound effects; quitting returns to the main menu and the tune restarts (real C64 OK) |
 | v1.23 | Dark blue sky and a black parallax city in every city part, weather effects kept (emulator-tested) |
 | v1.24 | Memory tidy-up: all text screens in the compact script format, shared screen-clear routine (about 600 bytes freed), Slime Dodge BEST label fixed (emulator-tested) |
+| v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (emulator-tested) |
 
 ## Credits
 
