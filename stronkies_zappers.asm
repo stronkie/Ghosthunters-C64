@@ -1,4 +1,4 @@
-CODEORG = $78c0
+CODEORG = $76a0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$30,$39,$31,$32,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$30,$33,$36,$38,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -966,42 +966,46 @@ demostr
         .text "DEMO - PRESS FIRE TO PLAY"
         .byte 0
 hallscr
-        .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0,12,7
         .text "- HALL OF FAME -"
-        .byte $13,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 1,10,14
         .text "TOP 10 GHOST ZAPPERS"
-        .byte $13,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0
+        .byte 3,7,7
         .text " 1.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 4,7,1
         .text " 2.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $9f
+        .byte 0
+        .byte 5,7,3
         .text " 3.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$9a
+        .byte 0
+        .byte 6,7,14
         .text " 4.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 7,7,14
         .text " 5.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 8,7,14
         .text " 6.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 9,7,14
         .text " 7.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 10,7,14
         .text " 8.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 11,7,14
         .text " 9.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
+        .byte 0
+        .byte 12,7,14
         .text "10.                 LV   "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 14,6,5
         .text "PRESS FIRE OR SPACE TO PLAY"
         .byte 0
+        .byte $ff
 entryscr
         .byte $93
         .byte $13,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
@@ -1033,27 +1037,28 @@ defname .text "NO NAME "
 mutemsg .text "M:MUSIC ON "
         .text "M:MUSIC OFF"
 bintscr
-        .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .byte 0,10,2
         .text "WARNING - BOSS AHEAD!"
-        .byte $13,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0
+        .byte 1,9,7
         .text "THE MARSHMALLOW MAULER"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$1d,$1d,$1d,$1d,$1d,$05
+        .byte 0
+        .byte 2,5,1
         .text "CATCH 20 GHOSTS AND HE ARRIVES"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$99
+        .byte 0
+        .byte 3,7,13
         .text "HIT HIM 3 TIMES TO STUN HIM"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$1d,$1d,$9f
+        .byte 0
+        .byte 4,2,3
         .text "THEN DEPLOY THE TRAP: STICK UP OR T"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$1d,$1d,$1c
+        .byte 0
+        .byte 5,2,2
         .text "ATTACKS: HOMING SPREAD SNIPER PINCER"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$05
+        .byte 0
+        .byte 14,10,1
         .text "PRESS FIRE OR SPACE"
         .byte 0
+        .byte $ff
 bosshud
         .byte $13,$11,$1d,$1d,$1c
         .text "BOSS HP:3   "
@@ -1119,13 +1124,13 @@ names
         .text "FLOATY  "
 
 hrow_lo
-        .byte $ac,$fc,$4c,$9c,$ec,$3c,$8c,$dc,$2c,$7c
+        .byte $84,$ac,$d4,$fc,$24,$4c,$74,$9c,$c4,$ec
 hrow_hi
-        .byte $04,$04,$05,$05,$05,$06,$06,$06,$07,$07
+        .byte $04,$04,$04,$04,$05,$05,$05,$05,$05,$05
 hcol_lo
-        .byte $a7,$f7,$47,$97,$e7,$37,$87,$d7,$27,$77
+        .byte $7f,$a7,$cf,$f7,$1f,$47,$6f,$97,$bf,$e7
 hcol_hi
-        .byte $d8,$d8,$d9,$d9,$d9,$da,$da,$da,$db,$db
+        .byte $d8,$d8,$d8,$d8,$d9,$d9,$d9,$d9,$d9,$d9
 
 ; ---------------------------------------------------------------------
 ;  game music data
@@ -1146,7 +1151,7 @@ pwmsgc  .byte 3,7,13,7
 rainbow .byte 2,8,7,5,3,6,4,10
 needtab .byte 20,25,30,35,40,45,50,55,60
 fanotes .byte 5,6,7,8
-pinfy   .byte 94,126,158,190
+pinfy   .byte 71,95,119,143
 bmask   .byte 4,2,1
 pcell   .byte 160,170,170,170,170,172,172,172,172,172,190,190,190,190,190,189,189,189,189,189
 bigfont
@@ -1204,38 +1209,37 @@ lcstr
         .text "======================================"
         .byte 0
 pinfoscr
-        .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$9e
+        .byte 0,15,7
         .text "POWER-UPS"
-        .byte $13,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
-        .text "CATCH THEM BEFORE THEY LAND!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "INVINCIBLE FOR 10 SECONDS"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$98
-        .text "DROP RATE 10%"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$05
-        .text "FULL ENERGY AT ONCE"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$98
-        .text "DROP RATE 20%"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "TWO PROTON BEAMS FOR 15 SECONDS"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$98
-        .text "DROP RATE 20%"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "EXTRA LIFE"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$98
-        .text "DROP RATE 5%"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$05
-        .text "PRESS FIRE OR SPACE"
         .byte 0
+        .byte 1,6,3
+        .text "CATCH THEM BEFORE THEY LAND!"
+        .byte 0
+        .byte 3,8,1
+        .text "INVINCIBLE FOR 10 SECONDS"
+        .byte 0
+        .byte 4,8,12
+        .text "DROP RATE 10 PCT"
+        .byte 0
+        .byte 6,8,1
+        .text "FULL ENERGY AT ONCE"
+        .byte 0
+        .byte 7,8,12
+        .text "DROP RATE 20 PCT"
+        .byte 0
+        .byte 9,8,1
+        .text "TWO PROTON BEAMS FOR 15 SECONDS"
+        .byte 0
+        .byte 10,8,12
+        .text "DROP RATE 20 PCT"
+        .byte 0
+        .byte 12,8,1
+        .text "EXTRA LIFE"
+        .byte 0
+        .byte 13,8,12
+        .text "DROP RATE 5 PCT"
+        .byte 0
+        .byte $ff
 
 ; ---------------------------------------------------------------------
 ;  skyline: tiles, colours and the 128 column city map (8 rows)
@@ -3222,12 +3226,7 @@ drawhome
         lda scr
         bne dhstd
         jmp showtitle
-dhstd   jsr ecmoff              ; the information pages use plain text mode
-        lda #0
-        sta BORDER
-        sta BGCOL
-        lda scr
-        cmp #2
+dhstd   cmp #2
         bcs dhp
         jmp showhall
 dhp     cmp #3
@@ -3277,24 +3276,27 @@ showtitle
         rts
 
 showhall
-        lda #0
-        sta SPENA
-        jsr drawbg
+        jsr skyscreen
         lda #<hallscr
         sta PTR
         lda #>hallscr
         sta PTR+1
-        jsr printstr
-        jmp drawhall
+        jsr drawscript
+        jsr drawhall
+        lda #$5b
+        sta D011
+        rts
 
 ; ---- boss intro screen (third home screen)
 showbint
-        jsr drawbg
+        jsr skyscreen
         lda #<bintscr
         sta PTR
         lda #>bintscr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
+        lda #$5b
+        sta D011
         lda #$20                ; only the boss sprite, doubled both ways
         sta SPENA
         sta SPXEX
@@ -3318,6 +3320,9 @@ bossanim
         sta VIC+10
         ldx ph2
         lda sintab_y,x
+        lsr
+        clc
+        adc #53
         sta VIC+11
         lda ph                  ; angry colour flicker
         and #8
@@ -3333,7 +3338,7 @@ ba2     sta SPCOL+5
         jmp ba4
 ba3     lda #1
 ba4     ldx #18
-ba5     sta COLORRAM+22*40+10,x
+ba5     sta COLORRAM+14*40+10,x
         dex
         bpl ba5
         rts
@@ -3499,7 +3504,7 @@ hp1     lda plc_txt,x
         pla
         bpl hp9
         ldy #4
-        lda #42
+        lda #43                 ; (a + for a finished game)
         sta (PTR),y
         lda #7
         sta (PTR2),y
@@ -6718,6 +6723,185 @@ hw3     jsr waitframe           ; and let go again before the title returns
         sta KEYBUF
         jmp title
 
+bmscr
+        .byte 1,14,7
+        .text "BONUS GAMES"
+        .byte 0
+        .byte 3,7,14
+        .text "PICK A GAME AND PRESS FIRE"
+        .byte 0
+        .byte 5,9,15
+        .text "SLIME DODGE"
+        .byte 0
+        .byte 6,9,11
+        .text "DODGE THE FALLING SLIME"
+        .byte 0
+        .byte 5,27,7
+        .text "BEST 0000"
+        .byte 0
+        .byte 8,9,15
+        .text "GHOST WHACK"
+        .byte 0
+        .byte 9,9,11
+        .text "ZAP GHOSTS IN THE WINDOWS"
+        .byte 0
+        .byte 8,27,7
+        .text "BEST 00"
+        .byte 0
+        .byte 11,9,15
+        .text "MEMORY GHOSTS"
+        .byte 0
+        .byte 12,9,11
+        .text "REPEAT THE GHOST NOTES"
+        .byte 0
+        .byte 11,27,7
+        .text "BEST 00"
+        .byte 0
+        .byte 14,7,12
+        .text "FIRE: PLAY    RUN/STOP: BACK"
+        .byte 0
+        .byte $ff
+bmlo    .byte $ce,$46,$be
+bmhi    .byte $04,$05,$05
+bmsel   .byte 0
+bmret   .byte 0
+bm_fp   .byte 0
+bm_md   .byte 0
+bm_bl   .byte 0
+
+bmdraw  lda ph                  ; the chosen game blinks
+        and #$20
+        beq bd_a
+        lda #7
+        bne bd_b
+bd_a    lda #1
+bd_b    sta bm_bl
+        ldx #2
+bd1     lda bmlo,x
+        sta PTR
+        sta PTR2
+        lda bmhi,x
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        ldy #0
+        lda #$20
+        sta (PTR),y
+        lda #15
+        cpx bmsel
+        bne bd2
+        lda #45
+        sta (PTR),y
+        lda bm_bl
+bd2     ldy #3
+bd3     sta (PTR2),y
+        iny
+        cpy #16
+        bne bd3
+        lda #7
+        ldy #0
+        sta (PTR2),y
+        dex
+        bpl bd1
+        rts
+
+bonusmenu
+        ldx spsave              ; (clean stack: this page is left with jmp)
+        txs
+        jsr skyscreen
+        jsr sethome             ; menu tune
+        lda #<bmscr
+        sta PTR
+        lda #>bmscr
+        sta PTR+1
+        jsr drawscript
+        lda #<(SCREEN+5*40+32)
+        sta PTR
+        lda #>(SCREEN+5*40+32)
+        sta PTR+1
+        lda sdbsh
+        ldx sdbsl
+        jsr put4
+        lda #<(SCREEN+8*40+32)
+        sta PTR
+        lda #>(SCREEN+8*40+32)
+        sta PTR+1
+        lda gw_best
+        jsr put2bin
+        lda #<(SCREEN+11*40+32)
+        sta PTR
+        lda #>(SCREEN+11*40+32)
+        sta PTR+1
+        lda mm_best
+        jsr put2bin
+        lda #$5b                ; screen on
+        sta D011
+        lda #1
+        sta bm_fp               ; (a fire button that is still down does not count)
+        lda #0
+        sta bm_md
+        sta KEYBUF
+bmloop  jsr waitframe
+        inc ph
+        jsr bmdraw
+        jsr readinput
+        lda KEYPRESS
+        cmp #63
+        bne bm_k
+bm_bk   jsr waitframe           ; RUN/STOP: back to the title (wait until it is let go)
+        lda KEYPRESS
+        cmp #64
+        bne bm_bk
+        lda #0
+        sta bmret
+        sta KEYBUF
+        jmp title
+bm_k    lda bm_md
+        beq bm_m0
+        dec bm_md
+        jmp bm_f
+bm_m0   lda joyv
+        and #1
+        beq bm_u
+        lda key
+        cmp #9
+        beq bm_u
+        lda joyv
+        and #2
+        beq bm_d
+        lda key
+        cmp #13
+        beq bm_d
+        jmp bm_f
+bm_u    lda bmsel
+        beq bm_s
+        dec bmsel
+        jmp bm_s
+bm_d    lda bmsel
+        cmp #2
+        bcs bm_s
+        inc bmsel
+bm_s    lda #8
+        sta bm_md
+bm_f    lda inf
+        beq bm_f0
+        lda bm_fp
+        bne bmloop
+        lda #1
+        sta bm_fp
+        sta bmret               ; the game comes back here when it ends
+        ldx bmsel
+        beq bm_g0
+        cpx #1
+        beq bm_g1
+        jmp memghosts
+bm_g0   jmp slimedodge
+bm_g1   jmp ghostwhack
+bm_f0   lda #0
+        sta bm_fp
+        jmp bmloop
+
 waitframe                       ; wait for one full frame (raster line 248)
         lda RASTER
         cmp #$f8
@@ -9473,12 +9657,14 @@ ptrfix  lda #spr_ghost/64
         rts
 
 showpinfo
-        jsr drawbg
+        jsr skyscreen
         lda #<pinfoscr
         sta PTR
         lda #>pinfoscr
         sta PTR+1
-        jsr printstr
+        jsr drawscript
+        lda #$5b
+        sta D011
         lda #spr_pwi/64
         sta SPRPTR
         lda #spr_pwe/64
@@ -11444,181 +11630,3 @@ mmagain
 ; ---------------------------------------------------------------------
 ;  BONUS GAMES page and HOW TO PLAY page
 ; ---------------------------------------------------------------------
-bmscr
-        .byte 1,14,7
-        .text "BONUS GAMES"
-        .byte 0
-        .byte 3,7,14
-        .text "PICK A GAME AND PRESS FIRE"
-        .byte 0
-        .byte 5,9,15
-        .text "SLIME DODGE"
-        .byte 0
-        .byte 6,9,11
-        .text "DODGE THE FALLING SLIME"
-        .byte 0
-        .byte 5,27,7
-        .text "BEST 0000"
-        .byte 0
-        .byte 8,9,15
-        .text "GHOST WHACK"
-        .byte 0
-        .byte 9,9,11
-        .text "ZAP GHOSTS IN THE WINDOWS"
-        .byte 0
-        .byte 8,27,7
-        .text "BEST 00"
-        .byte 0
-        .byte 11,9,15
-        .text "MEMORY GHOSTS"
-        .byte 0
-        .byte 12,9,11
-        .text "REPEAT THE GHOST NOTES"
-        .byte 0
-        .byte 11,27,7
-        .text "BEST 00"
-        .byte 0
-        .byte 14,7,12
-        .text "FIRE: PLAY    RUN/STOP: BACK"
-        .byte 0
-        .byte $ff
-bmlo    .byte $ce,$46,$be
-bmhi    .byte $04,$05,$05
-bmsel   .byte 0
-bmret   .byte 0
-bm_fp   .byte 0
-bm_md   .byte 0
-bm_bl   .byte 0
-
-bmdraw  lda ph                  ; the chosen game blinks
-        and #$20
-        beq bd_a
-        lda #7
-        bne bd_b
-bd_a    lda #1
-bd_b    sta bm_bl
-        ldx #2
-bd1     lda bmlo,x
-        sta PTR
-        sta PTR2
-        lda bmhi,x
-        sta PTR+1
-        clc
-        adc #$d4
-        sta PTR2+1
-        ldy #0
-        lda #$20
-        sta (PTR),y
-        lda #15
-        cpx bmsel
-        bne bd2
-        lda #45
-        sta (PTR),y
-        lda bm_bl
-bd2     ldy #3
-bd3     sta (PTR2),y
-        iny
-        cpy #16
-        bne bd3
-        lda #7
-        ldy #0
-        sta (PTR2),y
-        dex
-        bpl bd1
-        rts
-
-bonusmenu
-        ldx spsave              ; (clean stack: this page is left with jmp)
-        txs
-        jsr skyscreen
-        jsr sethome             ; menu tune
-        lda #<bmscr
-        sta PTR
-        lda #>bmscr
-        sta PTR+1
-        jsr drawscript
-        lda #<(SCREEN+5*40+32)
-        sta PTR
-        lda #>(SCREEN+5*40+32)
-        sta PTR+1
-        lda sdbsh
-        ldx sdbsl
-        jsr put4
-        lda #<(SCREEN+8*40+32)
-        sta PTR
-        lda #>(SCREEN+8*40+32)
-        sta PTR+1
-        lda gw_best
-        jsr put2bin
-        lda #<(SCREEN+11*40+32)
-        sta PTR
-        lda #>(SCREEN+11*40+32)
-        sta PTR+1
-        lda mm_best
-        jsr put2bin
-        lda #$5b                ; screen on
-        sta D011
-        lda #1
-        sta bm_fp               ; (a fire button that is still down does not count)
-        lda #0
-        sta bm_md
-        sta KEYBUF
-bmloop  jsr waitframe
-        inc ph
-        jsr bmdraw
-        jsr readinput
-        lda KEYPRESS
-        cmp #63
-        bne bm_k
-bm_bk   jsr waitframe           ; RUN/STOP: back to the title (wait until it is let go)
-        lda KEYPRESS
-        cmp #64
-        bne bm_bk
-        lda #0
-        sta bmret
-        sta KEYBUF
-        jmp title
-bm_k    lda bm_md
-        beq bm_m0
-        dec bm_md
-        jmp bm_f
-bm_m0   lda joyv
-        and #1
-        beq bm_u
-        lda key
-        cmp #9
-        beq bm_u
-        lda joyv
-        and #2
-        beq bm_d
-        lda key
-        cmp #13
-        beq bm_d
-        jmp bm_f
-bm_u    lda bmsel
-        beq bm_s
-        dec bmsel
-        jmp bm_s
-bm_d    lda bmsel
-        cmp #2
-        bcs bm_s
-        inc bmsel
-bm_s    lda #8
-        sta bm_md
-bm_f    lda inf
-        beq bm_f0
-        lda bm_fp
-        bne bmloop
-        lda #1
-        sta bm_fp
-        sta bmret               ; the game comes back here when it ends
-        ldx bmsel
-        beq bm_g0
-        cpx #1
-        beq bm_g1
-        jmp memghosts
-bm_g0   jmp slimedodge
-bm_g1   jmp ghostwhack
-bm_f0   lda #0
-        sta bm_fp
-        jmp bmloop
