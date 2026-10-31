@@ -1,5 +1,7 @@
 # Stronkie's Hunters v1.10
 
+**Final release.** v1.10 is the finished game. It will only change if bugs are found.
+
 New pause menu (press P during play):
 
 - Panel with score, best score, lives, level, ghosts caught and the current place.
