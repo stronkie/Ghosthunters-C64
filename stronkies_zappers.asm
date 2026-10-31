@@ -1,4 +1,4 @@
-CODEORG = $7ba0
+CODEORG = $7bb0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$31,$36,$34,$38,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$31,$36,$36,$34,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -805,6 +805,7 @@ sch     .byte 0
 zap     .byte 0
 flash   .byte 0
 ht      .byte 0
+hinv    .byte 0                 ; 3 seconds of invincibility after the hunter was hit
 mtimer  .byte 0
 mnote   .byte 0
 lives   .byte 0
@@ -2942,6 +2943,8 @@ invkill stx itmp                ; ghost X was shot: explosion + 1000 points
 invend  lda #0                  ; raid over: boss of this level appears
         sta invmode
         jsr sprreset
+        lda #$0c                ; the two beam pieces are double height in the game
+        sta SPYEX
         lda need
         sta lvlg
         jsr showprog
@@ -3750,6 +3753,7 @@ newgame lda #0
         sta invt
         sta dbt
         sta invmode
+        sta hinv
         sta gmode
         sta nm_clr              ; New York: nothing cleared yet
         sta won
@@ -3818,10 +3822,25 @@ gnodemo lda gmode               ; cutscenes: car, countdown, boss approach, leve
         jsr gametimers
         jsr scrollsky
         jmp bodyend
-gnorm   lda cheat               ; cheat: N = skip to the end of the level
+gnorm   lda cheat               ; cheat: N = skip to the end of the level, S = S coin
         beq gn0
         lda key
-        cmp #39
+        cmp #13
+        bne gnc1
+        lda ppact
+        bne gnc1
+        lda #4
+        sta pwtype
+        lda pxl
+        sta pwxl
+        lda pxh
+        sta pwxh
+        lda #100
+        sta pwy
+        lda #1
+        sta ppact
+        jmp gn0
+gnc1    cmp #39
         bne gn0
         lda #0
         sta gph
@@ -4117,7 +4136,7 @@ nopsp   ldx fon                 ; beam only while the blaster has power
         beq nobeam
         ora #12                 ; proton beam
 nobeam  sta spm
-        lda ht                  ; hunter blinks after being hit
+        lda hinv                ; hunter blinks while invincible after being hit
         and #4
         beq noblink
         lda spm
@@ -4170,6 +4189,8 @@ fired
         beq nohurt
         lda invt                ; invincible: slime can't hurt
         bne nohurt
+        lda hinv
+        bne nohurt
         lda jy                  ; (it must really be down at the hunter)
         cmp #200
         bcc nohurt
@@ -4181,6 +4202,8 @@ fired
 nohurt  lda p2act               ; the second ball of a boss pattern
         beq nohurt2
         lda invt
+        bne nohurt2
+        lda hinv
         bne nohurt2
         lda j2y
         cmp #200
@@ -4231,7 +4254,10 @@ noflash jsr ghostlook          ; wobble frame + colour of the ghost type
         beq gn_ni
         jsr invframe            ; hidden S round: the five raiders
 gn_ni
-        lda ht                  ; red border while recovering
+        lda hinv
+        beq nohi
+        dec hinv
+nohi    lda ht                  ; red border while recovering
         beq noht
         dec ht
         bne htact
@@ -4355,6 +4381,8 @@ hu_c
         lda #1                  ; hurt: falling wail
         jsr fxstart
         jsr bigmsg              ; "HE SLIMED ME" + 4 second pause
+        lda #150                ; then 3 seconds in which nothing can hurt
+        sta hinv
         rts
 
 ; next attack comes sooner as you catch ghosts in a level (80 - 6 per
@@ -4549,6 +4577,7 @@ ad3     lda t1
 startlevel
         lda #0
         sta invmode
+        sta hinv
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level

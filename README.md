@@ -2,7 +2,7 @@
 
 A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.12 is the final release.** It is only updated if bugs are found.
+**v1.12.1 is the current release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
