@@ -1,4 +1,4 @@
-CODEORG = $79e0
+CODEORG = $78c0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$31,$32,$30,$30,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$30,$39,$31,$32,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -911,34 +911,46 @@ ename   .byte 32,32,32,32,32,32,32,32
 ;  text screens (PETSCII: $93 clear, $13 home, $11 down, $1d right)
 ; ---------------------------------------------------------------------
 titlescr
-        .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .byte 0,11,7
         .text "STRONKIE'S ZAPPERS"
-        .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "2026"
-        .byte $13,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9a
-        .text "A GHOST HUNTING GAME"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$1d,$1d,$1d,$1d,$05
-        .text "JOYSTICK (PORT 2) OR A/D + SPACE"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$1d,$1d,$1d,$99
-        .text "DODGE THE SLIME - YOU HAVE 3 LIVES"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9f
-        .text "GRAB POWER-UPS TO RECHARGE"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$1d,$1d,$1d,$9e
-        .text "HIGH SCORE:               LV:  "
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$05
-        .text "PRESS FIRE OR SPACE"
-        .byte $13
-        .byte $11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$9f
-        .text "B:SLIME  W:WHACK  Y:MEMORY"
         .byte 0
+        .byte 1,10,14
+        .text "A GHOST HUNTING GAME"
+        .byte 0
+        .byte 11,3,7
+        .text "HIGH SCORE"
+        .byte 0
+        .byte 11,14,1
+        .text "        "
+        .byte 0
+        .byte 11,23,3
+        .text "0000"
+        .byte 0
+        .byte 11,28,7
+        .text "LV"
+        .byte 0
+        .byte 11,31,3
+        .text "00"
+        .byte 0
+        .byte 12,15,15
+        .text "START GAME"
+        .byte 0
+        .byte 13,14,15
+        .text "BONUS GAMES"
+        .byte 0
+        .byte 14,14,15
+        .text "HOW TO PLAY"
+        .byte 0
+        .byte 24,36,11
+        .text "2026"
+        .byte 0
+        .byte $ff
+mslo    .byte $ec,$14,$3c
+mshi    .byte $05,$06,$06
+mclo    .byte $ee,$16,$3e
+mchi    .byte $d9,$da,$da
+msel    .byte 0
+mdel    .byte 0
 hudscr
         .byte $93
         .byte $13,$11,$1d,$1d,$99
@@ -3127,21 +3139,24 @@ mr2     lda key
         cmp #63                 ; RUN/STOP
         bne hnostop
         jmp quit
-hnostop lda key                 ; B = mini game Slime Dodge
+hnostop lda key                 ; B = bonus games
         cmp #28
         bne hnob
-        jmp slimedodge
-hnob    lda key                 ; W = mini game Ghost Whack
-        cmp #9
-        bne hnow
-        jmp ghostwhack
-hnow    lda key                 ; Y = mini game Memory Ghosts
-        cmp #25
-        bne hnoh
-        jmp memghosts
-hnoh    lda inf                 ; fire = start the game
+        jmp bonusmenu
+hnob    lda scr                 ; the menu only works on the title page
+        bne hfire
+        jsr menumove
+        lda inf
         beq hnofire
-        jmp newgame
+        ldx msel
+        beq hgo
+        cpx #1
+        beq hbon
+        jmp howto
+hbon    jmp bonusmenu
+hfire   lda inf                 ; (the other pages: fire starts the game)
+        beq hnofire
+hgo     jmp newgame
 hnofire lda key                 ; any other activity resets the idle timer
         cmp #64
         bne hact
@@ -3205,9 +3220,14 @@ hmus2   jmp hloop
 drawhome
         jsr ptrfix
         lda scr
-        bne dhhall
+        bne dhstd
         jmp showtitle
-dhhall  cmp #2
+dhstd   jsr ecmoff              ; the information pages use plain text mode
+        lda #0
+        sta BORDER
+        sta BGCOL
+        lda scr
+        cmp #2
         bcs dhp
         jmp showhall
 dhp     cmp #3
@@ -3216,33 +3236,30 @@ dhp     cmp #3
 dhboss  jmp showbint
 
 showtitle
-        jsr drawbg
+        jsr skyscreen
         lda #<titlescr
         sta PTR
         lda #>titlescr
         sta PTR+1
-        jsr printstr
-        lda #TMCODE             ; trademark mark next to the title
-        sta SCREEN+40+26
-        lda #7
-        sta COLORRAM+40+26
+        jsr drawscript
+        jsr drawmenu
         jsr showmute
-        lda #<(SCREEN+20*40+15) ; best hunter: name + score + level
+        lda #<(SCREEN+11*40+14) ; best hunter: name + score + level
         sta PTR
-        lda #>(SCREEN+20*40+15)
+        lda #>(SCREEN+11*40+14)
         sta PTR+1
         ldx #0
         jsr putname
-        lda #<(SCREEN+20*40+24)
+        lda #<(SCREEN+11*40+23)
         sta PTR
-        lda #>(SCREEN+20*40+24)
+        lda #>(SCREEN+11*40+23)
         sta PTR+1
         lda hsh_tab
         ldx hsl_tab
         jsr put4
-        lda #<(SCREEN+20*40+32)
+        lda #<(SCREEN+11*40+31)
         sta PTR
-        lda #>(SCREEN+20*40+32)
+        lda #>(SCREEN+11*40+31)
         sta PTR+1
         lda hlv_tab
         jsr put2bin
@@ -3255,6 +3272,8 @@ showtitle
         sta SPCOL
         lda #0
         sta MSBX
+        lda #$5b                ; screen on
+        sta D011
         rts
 
 showhall
@@ -3336,7 +3355,7 @@ showmute
 smm     ldy #0
 sml     lda mutemsg,x
         and #$3f
-        sta SCREEN+21*40+14,y
+        sta SCREEN+24*40+14,y
         inx
         iny
         cpy #11
@@ -3346,7 +3365,7 @@ sml     lda mutemsg,x
         beq smc
         lda #2
 smc     ldy #10
-smd     sta COLORRAM+21*40+14,y
+smd     sta COLORRAM+24*40+14,y
         dey
         bpl smd
 sm9     rts
@@ -3364,18 +3383,36 @@ titleanim
         sta VIC
         ldx ph2
         lda sintab_y,x
+        lsr
+        clc
+        adc #24
         sta VIC+1
-        lda ph                  ; blink "PRESS FIRE"
+        ldy #10                 ; menu items grey, the chosen one blinks
+        lda #15
+tm1     sta COLORRAM+12*40+14,y
+        sta COLORRAM+13*40+14,y
+        sta COLORRAM+14*40+14,y
+        dey
+        bpl tm1
+        lda ph
         and #$20
-        beq tb1
-        lda #11
-        jmp tb2
-tb1     lda #1
-tb2     ldx #18
-tb3     sta COLORRAM+22*40+10,x
-        dex
-        bpl tb3
+        beq tm2
+        lda #7
+        bne tm3
+tm2     lda #1
+tm3     pha
+        ldx msel
+        lda mclo,x
+        sta PTR
+        lda mchi,x
+        sta PTR+1
+        pla
+        ldy #10
+tm4     sta (PTR),y
+        dey
+        bpl tm4
         rts
+
 
 ; fill the Hall of Fame rows with names and scores
 drawhall
@@ -6128,7 +6165,10 @@ sdx1    jsr waitframe           ; wait until RUN/STOP is let go (the menu would 
         bne sdx1
         lda #0
         sta KEYBUF
-        jmp title
+        lda bmret
+        beq sdx2
+        jmp bonusmenu
+sdx2    jmp title
 
 
 
@@ -6448,6 +6488,235 @@ mmo3    jsr readinput
         beq mmo2
         jmp mmnew
 
+
+
+; ---------------------------------------------------------------------
+;  shared screen pieces for the menus: skyline backdrop, text scripts
+; ---------------------------------------------------------------------
+skyscreen                       ; black sky, the game's skyline along the bottom
+        lda #0
+        sta SPENA
+        sta MSBX
+        lda #$c8
+        sta D016
+        jsr ecmon               ; the game's own look: bezel border, building colours
+        lda #$4b                ; (screen off while it is drawn)
+        sta D011
+        lda #$1e
+        sta D018
+        ldx #0
+        lda #$20
+sk_c1   sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne sk_c1
+        ldx #232
+sk_c2   sta SCREEN+767,x
+        dex
+        bne sk_c2
+        lda #1
+        jsr fillcol
+        jsr settheme
+        lda #0
+        sta BGCOL
+        sta skycol
+        jmp drawsky
+
+pt_col  .byte 0
+drawscript                      ; (PTR) = row, column, colour, text, 0 ... $ff
+dsc_l   ldy #0
+        lda (PTR),y
+        cmp #$ff
+        beq dsc_d
+        tax
+        lda rowlo,x
+        sta PTR2
+        lda rowhi,x
+        sta PTR2+1
+        iny
+        lda (PTR),y
+        clc
+        adc PTR2
+        sta PTR2
+        bcc dsc_2
+        inc PTR2+1
+dsc_2   iny
+        lda (PTR),y
+        sta pt_col
+        clc
+        lda PTR
+        adc #3
+        sta PTR
+        bcc dsc_3
+        inc PTR+1
+dsc_3   ldy #0
+dsc_4   lda (PTR),y
+        beq dsc_5
+        and #$3f
+        sta (PTR2),y
+        lda PTR2+1
+        pha
+        clc
+        adc #$d4
+        sta PTR2+1
+        lda pt_col
+        sta (PTR2),y
+        pla
+        sta PTR2+1
+        iny
+        bne dsc_4
+dsc_5   iny
+        tya
+        clc
+        adc PTR
+        sta PTR
+        bcc dsc_l
+        inc PTR+1
+        jmp dsc_l
+dsc_d   rts
+
+drawmenu                        ; title menu: - marks the chosen item
+        ldx #2
+mn_1    lda mslo,x
+        sta PTR
+        sta PTR2
+        lda mshi,x
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        lda #$20
+        cpx msel
+        bne mn_2
+        lda #45
+mn_2    ldy #0
+        sta (PTR),y
+        ldy #15
+        sta (PTR),y
+        lda #7
+        ldy #0
+        sta (PTR2),y
+        ldy #15
+        sta (PTR2),y
+        dex
+        bpl mn_1
+        rts
+
+menumove                        ; stick / W / S: up and down in the menu
+        lda mdel
+        beq mn_m0
+        dec mdel
+        rts
+mn_m0   lda joyv
+        and #1
+        beq mn_u
+        lda key
+        cmp #9
+        beq mn_u
+        lda joyv
+        and #2
+        beq mn_d
+        lda key
+        cmp #13
+        beq mn_d
+        rts
+mn_u    lda msel
+        beq mn_x
+        dec msel
+        jmp mn_s
+mn_d    lda msel
+        cmp #2
+        bcs mn_x
+        inc msel
+mn_s    lda #8
+        sta mdel
+        jmp drawmenu
+mn_x    rts
+
+hwscr
+        .byte 1,14,7
+        .text "HOW TO PLAY"
+        .byte 0
+        .byte 3,3,14
+        .text "JOYSTICK IN PORT 2  OR  A / D + SPACE"
+        .byte 0
+        .byte 5,6,3
+        .text "LEFT / RIGHT"
+        .byte 0
+        .byte 5,24,1
+        .text "WALK"
+        .byte 0
+        .byte 6,6,3
+        .text "FIRE / SPACE"
+        .byte 0
+        .byte 6,24,1
+        .text "PROTON BEAM"
+        .byte 0
+        .byte 7,6,3
+        .text "STICK UP / T"
+        .byte 0
+        .byte 7,24,1
+        .text "GHOST TRAP"
+        .byte 0
+        .byte 8,6,3
+        .text "P"
+        .byte 0
+        .byte 8,24,1
+        .text "PAUSE MENU"
+        .byte 0
+        .byte 9,6,3
+        .text "M"
+        .byte 0
+        .byte 9,24,1
+        .text "MUSIC ON / OFF"
+        .byte 0
+        .byte 11,3,10
+        .text "DODGE THE SLIME - YOU HAVE 3 LIVES"
+        .byte 0
+        .byte 12,4,13
+        .text "CATCH POWER-UPS BEFORE THEY LAND"
+        .byte 0
+        .byte 14,9,12
+        .text "PRESS FIRE TO GO BACK"
+        .byte 0
+        .byte $ff
+
+howto   ldx spsave
+        txs
+        jsr skyscreen
+        jsr sethome
+        lda #<hwscr
+        sta PTR
+        lda #>hwscr
+        sta PTR+1
+        jsr drawscript
+        lda #$5b
+        sta D011
+hw1     jsr waitframe           ; first wait until fire / key from the menu is let go
+        jsr readinput
+        lda inf
+        bne hw1
+        lda KEYPRESS
+        cmp #64
+        bne hw1
+hw2     jsr waitframe
+        jsr readinput
+        lda inf
+        bne hw3
+        lda KEYPRESS
+        cmp #64
+        beq hw2
+hw3     jsr waitframe           ; and let go again before the title returns
+        jsr readinput
+        lda inf
+        bne hw3
+        lda KEYPRESS
+        cmp #64
+        bne hw3
+        lda #0
+        sta KEYBUF
+        jmp title
 
 waitframe                       ; wait for one full frame (raster line 248)
         lda RASTER
@@ -9113,44 +9382,17 @@ lc_nl   jmp startlevel
 lc_x    rts
 
 levelscreen
-        lda #0
-        sta SPENA
-        sta MSBX
-        lda #$c8
-        sta D016
-        jsr ecmon               ; the game's own look: bezel border, building colours
-        lda #$4b                ; (screen off while it is drawn)
-        sta D011
-        lda #$1e
-        sta D018
-        lda #$20
-        sta SID+4
-        sta SID+11
-        lda #$80
-        sta SID+18
-        ldx #0                  ; clear the screen
-        lda #$20
-ls_c1   sta SCREEN,x
-        sta SCREEN+256,x
-        sta SCREEN+512,x
-        inx
-        bne ls_c1
-        ldx #232
-ls_c2   sta SCREEN+767,x
-        dex
-        bne ls_c2
-        lda #1
-        jsr fillcol
-        jsr settheme            ; skyline colours of the place
+        jsr skyscreen           ; the skyline of the place, black sky
         lda #1
         sta lcon
         lda #0
         sta hazecol
         sta wxm                 ; (no rain, fog or lightning over the panel)
-        lda #0                  ; night sky behind the panel
-        sta BGCOL
-        sta skycol
-        jsr drawsky             ; the skyline of that place along the bottom
+        lda #$20
+        sta SID+4
+        sta SID+11
+        lda #$80
+        sta SID+18
         lda #<lcstr
         sta PTR
         lda #>lcstr
@@ -11199,4 +11441,184 @@ mmagain
         .text "FIRE: AGAIN  RUN/STOP: MENU"
         .byte 0
 
+; ---------------------------------------------------------------------
+;  BONUS GAMES page and HOW TO PLAY page
+; ---------------------------------------------------------------------
+bmscr
+        .byte 1,14,7
+        .text "BONUS GAMES"
+        .byte 0
+        .byte 3,7,14
+        .text "PICK A GAME AND PRESS FIRE"
+        .byte 0
+        .byte 5,9,15
+        .text "SLIME DODGE"
+        .byte 0
+        .byte 6,9,11
+        .text "DODGE THE FALLING SLIME"
+        .byte 0
+        .byte 5,27,7
+        .text "BEST 0000"
+        .byte 0
+        .byte 8,9,15
+        .text "GHOST WHACK"
+        .byte 0
+        .byte 9,9,11
+        .text "ZAP GHOSTS IN THE WINDOWS"
+        .byte 0
+        .byte 8,27,7
+        .text "BEST 00"
+        .byte 0
+        .byte 11,9,15
+        .text "MEMORY GHOSTS"
+        .byte 0
+        .byte 12,9,11
+        .text "REPEAT THE GHOST NOTES"
+        .byte 0
+        .byte 11,27,7
+        .text "BEST 00"
+        .byte 0
+        .byte 14,7,12
+        .text "FIRE: PLAY    RUN/STOP: BACK"
+        .byte 0
+        .byte $ff
+bmlo    .byte $ce,$46,$be
+bmhi    .byte $04,$05,$05
+bmsel   .byte 0
+bmret   .byte 0
+bm_fp   .byte 0
+bm_md   .byte 0
+bm_bl   .byte 0
 
+bmdraw  lda ph                  ; the chosen game blinks
+        and #$20
+        beq bd_a
+        lda #7
+        bne bd_b
+bd_a    lda #1
+bd_b    sta bm_bl
+        ldx #2
+bd1     lda bmlo,x
+        sta PTR
+        sta PTR2
+        lda bmhi,x
+        sta PTR+1
+        clc
+        adc #$d4
+        sta PTR2+1
+        ldy #0
+        lda #$20
+        sta (PTR),y
+        lda #15
+        cpx bmsel
+        bne bd2
+        lda #45
+        sta (PTR),y
+        lda bm_bl
+bd2     ldy #3
+bd3     sta (PTR2),y
+        iny
+        cpy #16
+        bne bd3
+        lda #7
+        ldy #0
+        sta (PTR2),y
+        dex
+        bpl bd1
+        rts
+
+bonusmenu
+        ldx spsave              ; (clean stack: this page is left with jmp)
+        txs
+        jsr skyscreen
+        jsr sethome             ; menu tune
+        lda #<bmscr
+        sta PTR
+        lda #>bmscr
+        sta PTR+1
+        jsr drawscript
+        lda #<(SCREEN+5*40+32)
+        sta PTR
+        lda #>(SCREEN+5*40+32)
+        sta PTR+1
+        lda sdbsh
+        ldx sdbsl
+        jsr put4
+        lda #<(SCREEN+8*40+32)
+        sta PTR
+        lda #>(SCREEN+8*40+32)
+        sta PTR+1
+        lda gw_best
+        jsr put2bin
+        lda #<(SCREEN+11*40+32)
+        sta PTR
+        lda #>(SCREEN+11*40+32)
+        sta PTR+1
+        lda mm_best
+        jsr put2bin
+        lda #$5b                ; screen on
+        sta D011
+        lda #1
+        sta bm_fp               ; (a fire button that is still down does not count)
+        lda #0
+        sta bm_md
+        sta KEYBUF
+bmloop  jsr waitframe
+        inc ph
+        jsr bmdraw
+        jsr readinput
+        lda KEYPRESS
+        cmp #63
+        bne bm_k
+bm_bk   jsr waitframe           ; RUN/STOP: back to the title (wait until it is let go)
+        lda KEYPRESS
+        cmp #64
+        bne bm_bk
+        lda #0
+        sta bmret
+        sta KEYBUF
+        jmp title
+bm_k    lda bm_md
+        beq bm_m0
+        dec bm_md
+        jmp bm_f
+bm_m0   lda joyv
+        and #1
+        beq bm_u
+        lda key
+        cmp #9
+        beq bm_u
+        lda joyv
+        and #2
+        beq bm_d
+        lda key
+        cmp #13
+        beq bm_d
+        jmp bm_f
+bm_u    lda bmsel
+        beq bm_s
+        dec bmsel
+        jmp bm_s
+bm_d    lda bmsel
+        cmp #2
+        bcs bm_s
+        inc bmsel
+bm_s    lda #8
+        sta bm_md
+bm_f    lda inf
+        beq bm_f0
+        lda bm_fp
+        bne bmloop
+        lda #1
+        sta bm_fp
+        sta bmret               ; the game comes back here when it ends
+        ldx bmsel
+        beq bm_g0
+        cpx #1
+        beq bm_g1
+        jmp memghosts
+bm_g0   jmp slimedodge
+bm_g1   jmp ghostwhack
+bm_f0   lda #0
+        sta bm_fp
+        jmp bmloop
