@@ -805,6 +805,7 @@ sch     .byte 0
 zap     .byte 0
 flash   .byte 0
 ht      .byte 0
+hinv    .byte 0                 ; 3 seconds of invincibility after the hunter was hit
 mtimer  .byte 0
 mnote   .byte 0
 lives   .byte 0
@@ -3499,6 +3500,7 @@ newgame lda #0
         sta dmtl
         sta dmth
         sta invt
+        sta hinv
         sta dbt
         sta gmode
         sta nm_clr              ; New York: nothing cleared yet
@@ -3856,7 +3858,7 @@ nopsp   ldx fon                 ; beam only while the blaster has power
         beq nobeam
         ora #12                 ; proton beam
 nobeam  sta spm
-        lda ht                  ; hunter blinks after being hit
+        lda hinv                ; hunter blinks while invincible after being hit
         and #4
         beq noblink
         lda spm
@@ -3907,6 +3909,8 @@ fired
         beq nohurt
         lda invt                ; invincible: slime can't hurt
         bne nohurt
+        lda hinv
+        bne nohurt
         lda jy                  ; (it must really be down at the hunter)
         cmp #200
         bcc nohurt
@@ -3918,6 +3922,8 @@ fired
 nohurt  lda p2act               ; the second ball of a boss pattern
         beq nohurt2
         lda invt
+        bne nohurt2
+        lda hinv
         bne nohurt2
         lda j2y
         cmp #200
@@ -3964,7 +3970,10 @@ flashing lda flash
         sta BORDER
         sta SPCOL
 noflash jsr ghostlook          ; wobble frame + colour of the ghost type
-        lda ht                  ; red border while recovering
+        lda hinv
+        beq nohi
+        dec hinv
+nohi    lda ht                  ; red border while recovering
         beq noht
         dec ht
         bne htact
@@ -4088,6 +4097,8 @@ hu_c
         lda #1                  ; hurt: falling wail
         jsr fxstart
         jsr bigmsg              ; "HE SLIMED ME" + 4 second pause
+        lda #150                ; then 3 seconds in which nothing can hurt
+        sta hinv
         rts
 
 ; next attack comes sooner as you catch ghosts in a level (80 - 6 per
@@ -4281,6 +4292,7 @@ ad3     lda t1
 ; ---------------------------------------------------------------------
 startlevel
         lda #0
+        sta hinv
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level
@@ -4957,6 +4969,7 @@ nameentry
         jsr ecmoff
         lda #0
         sta BORDER
+        sta BGCOL
         jsr sethome
         lda #0
         sta SPENA
@@ -8403,7 +8416,11 @@ lc_x    rts
 levelscreen
         jsr ecmoff
         lda #0
-        sta BORDER
+        sta BORDER              ; all colours back to the default black
+        sta BGCOL
+        sta BGCOL1
+        sta BGCOL2
+        sta BGCOL3
         sta SPENA
         sta MSBX
         lda #$20
@@ -9477,6 +9494,11 @@ sc_skip jsr sc_cleanup
         rts
 sc_cleanup
         lda #0
+        sta BORDER              ; theme colours of the cutscene off again
+        sta BGCOL
+        sta BGCOL1
+        sta BGCOL2
+        sta BGCOL3
         sta SPENA
         sta SPXEX
         sta SPYEX
