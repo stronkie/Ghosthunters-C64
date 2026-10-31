@@ -81,7 +81,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-Each release is kept in its own folder (`v1.0` to `v1.10`), and earlier development snapshots are in `previous-versions/`.
+The final release is in `v1.10`. Older releases (`v1.0` to `v1.9`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
