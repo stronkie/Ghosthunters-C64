@@ -2,7 +2,7 @@
 
 A ghost-zapping game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-**v1.14 is the current release.** It is only updated if bugs are found.
+**v1.15 is the current release.** It is only updated if bugs are found.
 
 All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
@@ -81,7 +81,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-The final release is in `v1.14`. Older releases (`v1.0` to `v1.13`) and earlier development snapshots are in `previous-versions/`.
+The final release is in `v1.15`. Older releases (`v1.0` to `v1.14`) and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -101,7 +101,8 @@ The final release is in `v1.14`. Older releases (`v1.0` to `v1.13`) and earlier 
 | v1.11.1 | 3 seconds of invincibility after a slime hit; colours reset to default after each level (emulator-tested) |
 | v1.12 | Mini game Slime Dodge: press B on the title screen (confirmed on a real C64) |
 | v1.13 | Mini game Ghost Whack: press W on the title screen |
-| v1.14 | Mini game Memory Ghosts: press Y on the title screen (emulator-tested) |
+| v1.14 | Mini game Memory Ghosts: press Y on the title screen |
+| v1.15 | New level-complete status screen: panel over the skyline of the next place (emulator-tested) |
 
 ## Credits
 

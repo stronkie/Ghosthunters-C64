@@ -1,4 +1,4 @@
-CODEORG = $7990
+CODEORG = $79e0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$31,$31,$32,$30,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$31,$32,$30,$30,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -823,6 +823,7 @@ fine    .byte 0
 ffine   .byte 0                 ; far skyline: fine scroll 7..0
 fpar    .byte 0                 ; far skyline moves every 3rd frame
 farnext .byte 0                 ; next column of farmap
+lcon    .byte 0                 ; 1 while the level-complete screen is up
 hazecol .byte 0                 ; colour of the far city (haze behind the near buildings)
 mapnext .byte 0
 idlel   .byte 0
@@ -1167,24 +1168,28 @@ endapp
         .text "                                        "
         .byte 0
 lcstr
-        .byte $13,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $9e
-        .text "LEVEL 00 COMPLETE!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$05
-        .text "GHOSTS BUSTED: 0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$05
-        .text "YOUR SCORE:    0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$9e
-        .text "HIGH SCORE:    0000"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$99
-        .text "NEXT: LEVEL 00"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11
-        .byte $11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .byte $13,$11,$1d,$9e
+        .text "======================================"
+        .byte $13,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "LEVEL 00 CLEARED!"
+        .byte $13,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "GHOSTS BUSTED   "
+        .byte $9f
+        .text "0000"
+        .byte $13,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "YOUR SCORE      "
+        .byte $9f
+        .text "0000"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "HIGH SCORE      "
+        .byte $9f
+        .text "0000"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$99
+        .text "NEXT LEVEL: 00"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$05
         .text "PRESS SPACE OR FIRE TO GO ON"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$9e
+        .text "======================================"
         .byte 0
 pinfoscr
         .byte $13,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
@@ -4010,6 +4015,11 @@ nomus
         jmp gameover
 gcont
 bodyend jsr weather              ; rain, lightning, fog
+        lda lcon                ; level-complete screen: always a black sky
+        beq bd_nl
+        lda #0
+        sta skycol
+bd_nl
         jsr hunteranim          ; walk / shoot frame of the hunter
         jsr splits
         jmp gframe
@@ -4309,6 +4319,7 @@ ad3     lda t1
 startlevel
         lda #0
         sta hinv
+        sta lcon
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level
@@ -5796,23 +5807,6 @@ sdm     .byte 0
 sdmsb   .byte 0
 sdt2    .byte 0
 sdseed  .byte 1
-sdhead  .byte $93,$13,$05
-        .text "TIME:0000"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
-        .text "SLIME DODGE"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "BEST:0000"
-        .byte 0
-sdovr   .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
-        .text "YOU GOT SLIMED!"
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
-        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
-        .text "FIRE: AGAIN   RUN/STOP: MENU"
-        .byte 0
-
 sdrnd   lda sdseed              ; small random number generator
         asl
         bcc sdr1
@@ -6157,36 +6151,6 @@ mm_lt   .byte 0
 mm_pos  .byte 0
 mm_d    .byte 0
 mm_i    .byte 0
-mmhead  .byte $93,$13,$05
-        .text "ROUND:00"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $9e
-        .text "MEMORY GHOSTS"
-        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
-        .byte $05
-        .text "BEST:00"
-        .byte 0
-mmwatch
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
-        .text "   WATCH...   "
-        .byte 0
-mmturn
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
-        .text "  YOUR TURN!  "
-        .byte 0
-mmbad
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
-        .text "WRONG!  YOU GOT 00 ROUNDS"
-        .byte 0
-mmperf
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
-        .text "PERFECT MEMORY!  24 ROUNDS"
-        .byte 0
-mmagain
-        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
-        .text "FIRE: AGAIN  RUN/STOP: MENU"
-        .byte 0
-
 mmlight stx mm_i                ; A = direction 0-3: ghost lit up + its note
         tax
         lda mmwin,x
@@ -9127,7 +9091,7 @@ lc1b    lda gcnt
         jmp lc_b
 lc_a    lda #1
 lc_b    ldx #26
-lc_c    sta COLORRAM+20*40+9,x
+lc_c    sta COLORRAM+12*40+6,x
         dex
         bpl lc_c
         lda demo
@@ -9149,62 +9113,87 @@ lc_nl   jmp startlevel
 lc_x    rts
 
 levelscreen
-        jsr ecmoff
         lda #0
-        sta BORDER              ; all colours back to the default black
-        sta BGCOL
-        sta BGCOL1
-        sta BGCOL2
-        sta BGCOL3
         sta SPENA
         sta MSBX
+        lda #$c8
+        sta D016
+        jsr ecmon               ; the game's own look: bezel border, building colours
+        lda #$4b                ; (screen off while it is drawn)
+        sta D011
+        lda #$1e
+        sta D018
         lda #$20
         sta SID+4
         sta SID+11
         lda #$80
         sta SID+18
-        jsr drawbg
+        ldx #0                  ; clear the screen
+        lda #$20
+ls_c1   sta SCREEN,x
+        sta SCREEN+256,x
+        sta SCREEN+512,x
+        inx
+        bne ls_c1
+        ldx #232
+ls_c2   sta SCREEN+767,x
+        dex
+        bne ls_c2
+        lda #1
+        jsr fillcol
+        jsr settheme            ; skyline colours of the place
+        lda #1
+        sta lcon
+        lda #0
+        sta hazecol
+        sta wxm                 ; (no rain, fog or lightning over the panel)
+        lda #0                  ; night sky behind the panel
+        sta BGCOL
+        sta skycol
+        jsr drawsky             ; the skyline of that place along the bottom
         lda #<lcstr
         sta PTR
         lda #>lcstr
         sta PTR+1
         jsr printstr
         jsr shownext            ; where the taxi goes next
-        lda #<(SCREEN+4*40+17)  ; level just finished
+        lda #<(SCREEN+3*40+17)  ; level just finished
         sta PTR
-        lda #>(SCREEN+4*40+17)
+        lda #>(SCREEN+3*40+17)
         sta PTR+1
         lda lvl
         jsr put2bin
-        lda #<(SCREEN+8*40+24)  ; creatures busted
+        lda #<(SCREEN+5*40+25)  ; creatures busted
         sta PTR
-        lda #>(SCREEN+8*40+24)
+        lda #>(SCREEN+5*40+25)
         sta PTR+1
         lda gbh
         ldx gbl
         jsr put4
-        lda #<(SCREEN+10*40+24) ; score
+        lda #<(SCREEN+6*40+25)  ; score
         sta PTR
-        lda #>(SCREEN+10*40+24)
+        lda #>(SCREEN+6*40+25)
         sta PTR+1
         lda sch
         ldx scl
         jsr put4
-        lda #<(SCREEN+12*40+24) ; high score
+        lda #<(SCREEN+7*40+25)  ; high score
         sta PTR
-        lda #>(SCREEN+12*40+24)
+        lda #>(SCREEN+7*40+25)
         sta PTR+1
         lda hsh_tab
         ldx hsl_tab
         jsr put4
-        lda #<(SCREEN+16*40+20) ; next level
+        lda #<(SCREEN+10*40+25) ; next level
         sta PTR
-        lda #>(SCREEN+16*40+20)
+        lda #>(SCREEN+10*40+25)
         sta PTR+1
         lda lvl
         clc
         adc #1
         jsr put2bin
+        lda #$5b                ; screen on
+        sta D011
         ldx #0                  ; little fanfare
 lv_f    ldy fanotes,x
         lda freqlo,y
@@ -9795,9 +9784,9 @@ shownext                        ; level complete screen: NEXT STOP: <place>
         ldy #9
 sn1     lda sn_txt,y
         and #$3f
-        sta SCREEN+18*40+10,y
+        sta SCREEN+9*40+10,y
         lda #7
-        sta COLORRAM+18*40+10,y
+        sta COLORRAM+9*40+10,y
         dey
         bpl sn1
         ldx nm_cur
@@ -9806,9 +9795,9 @@ sn1     lda sn_txt,y
         ldy #0
 sn2     lda nm_names,x
         and #$3f
-        sta SCREEN+18*40+21,y
+        sta SCREEN+9*40+21,y
         lda #7
-        sta COLORRAM+18*40+21,y
+        sta COLORRAM+9*40+21,y
         inx
         iny
         cpy #17
@@ -11161,5 +11150,53 @@ gwo5    jsr readinput
         lda inf
         beq gwo4
         jmp gwnew
+
+; (text of the mini games lives up here to keep the main program area free)
+sdhead  .byte $93,$13,$05
+        .text "TIME:0000"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "SLIME DODGE"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "BEST:0000"
+        .byte 0
+sdovr   .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "YOU GOT SLIMED!"
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d
+        .byte $1d,$1d,$1d,$1d,$1d,$1d,$05
+        .text "FIRE: AGAIN   RUN/STOP: MENU"
+        .byte 0
+
+mmhead  .byte $93,$13,$05
+        .text "ROUND:00"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $9e
+        .text "MEMORY GHOSTS"
+        .byte $13,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d
+        .byte $05
+        .text "BEST:00"
+        .byte 0
+mmwatch
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "   WATCH...   "
+        .byte 0
+mmturn
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$9e
+        .text "  YOUR TURN!  "
+        .byte 0
+mmbad
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "WRONG!  YOU GOT 00 ROUNDS"
+        .byte 0
+mmperf
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$1d,$1c
+        .text "PERFECT MEMORY!  24 ROUNDS"
+        .byte 0
+mmagain
+        .byte $13,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$11,$1d,$1d,$1d,$1d,$1d,$1d,$9f
+        .text "FIRE: AGAIN  RUN/STOP: MENU"
+        .byte 0
 
 
