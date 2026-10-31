@@ -1,4 +1,4 @@
-CODEORG = $7950
+CODEORG = $7ba0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$31,$30,$35,$36,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$31,$36,$34,$38,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -1076,6 +1076,7 @@ msgtxt                  ; 10 character messages (row 5, column 15)
         .text "FULL POWER"
         .text "TWIN BEAMS"
         .text "EXTRA LIFE"
+        .text "SPACE RAID"
 
 ; ---------------------------------------------------------------------
 ;  Top 10 (BCD scores + 8 character names, initial entries)
@@ -1122,9 +1123,9 @@ diff    .byte 80,74,68,62,56,50,44,38,32,26,20
 lvlpen  .byte 0,4,8,12,16,20,24
 ospdtab .byte 3,3,4,4,5,5,6,6,6,6
 bhpcol  .byte 2,8,7,1                ; boss colour by HP: toasted gold, orange, red
-pwcol   .byte 3,1,7,1,13,1,7,1      ; power-up colours: I cyan, E yellow, G green, star yellow (flashing white)
-pwmsgx  .byte 30,40,50,60
-pwmsgc  .byte 3,7,13,7
+pwcol   .byte 3,1,7,1,13,1,7,1,2,1      ; power-up colours: I cyan, E yellow, G green, star yellow (flashing white)
+pwmsgx  .byte 30,40,50,60,70
+pwmsgc  .byte 3,7,13,7,3
 rainbow .byte 2,8,7,5,3,6,4,10
 needtab .byte 20,25,30,35,40,45,50,55,60
 fanotes .byte 5,6,7,8
@@ -2719,6 +2720,254 @@ hr1     lda hsdef,x
         jmp drawhome
 
 restflag .byte 0
+
+; ---------------------------------------------------------------------
+;  Hidden S bonus round: five ghosts march left and right, one line lower
+;  at every edge, until they reach the hunter.  Every ghost hit by the
+;  beam explodes: +1000.  When all five are gone the level boss comes.
+;  Uses sprites 0, 4, 5, 6, 7 (hunter and beams stay as they are).
+; ---------------------------------------------------------------------
+INVY0   = 116                   ; first row (its bottom touches the top of the beam)
+invstart
+        lda #1
+        sta invmode
+        lda #0
+        sta ppact
+        sta pact
+        sta p2act
+        sta idir
+        jsr rgkill
+        lda #INVY0
+        sta iy
+        ldx #4
+ins1    lda #1
+        sta ial,x
+        lda #0
+        sta iex,x
+        sta ixh,x
+        lda ixstart,x
+        sta ixl,x
+        dex
+        bpl ins1
+        rts
+
+invframe
+        ldx #4                  ; how many are still marching?
+        ldy #0
+inf1    lda ial,x
+        beq inf2
+        iny
+inf2    dex
+        bpl inf1
+        sty icnt
+        bne inf_go
+        jmp in_ex               ; nobody left: only explosions to finish
+inf_go  lda ispd,y
+        sta ispeed
+        ldx #4                  ; march
+inm1    lda ial,x
+        beq inm3
+        lda idir
+        bne inm2
+        clc
+        lda ixl,x
+        adc ispeed
+        sta ixl,x
+        lda ixh,x
+        adc #0
+        sta ixh,x
+        jmp inm3
+inm2    sec
+        lda ixl,x
+        sbc ispeed
+        sta ixl,x
+        lda ixh,x
+        sbc #0
+        sta ixh,x
+inm3    dex
+        bpl inm1
+        ldx #4                  ; the edge of the screen: turn round, one line down
+        lda idir
+        bne ine_l
+ine_r   lda ial,x
+        beq ine_r2
+        lda ixh,x
+        beq ine_r2
+        lda ixl,x
+        cmp #62                 ; x >= 318
+        bcs in_edge
+ine_r2  dex
+        bpl ine_r
+        jmp in_low
+ine_l   lda ial,x
+        beq ine_l2
+        lda ixh,x
+        bne ine_l2
+        lda ixl,x
+        cmp #27
+        bcc in_edge
+ine_l2  dex
+        bpl ine_l
+        jmp in_low
+in_edge lda idir
+        eor #1
+        sta idir
+        clc
+        lda iy
+        adc #12
+        sta iy
+in_low  lda iy                  ; down at the hunter?
+        cmp #200
+        bcc in_hit
+        jsr hurt                ; costs a life, the row starts again at the top
+        lda #INVY0
+        sta iy
+in_hit  lda fon                 ; the proton beam is on: hit whoever stands in it
+        beq in_ex
+        ldx #4
+inh1    lda ial,x
+        beq inh3
+        lda ixl,x
+        sta d1l
+        lda ixh,x
+        sta d1h
+        lda pxl
+        sta d2l
+        lda pxh
+        sta d2h
+        jsr absdiff
+        cmp #16
+        bcs inh3
+        jsr invkill
+inh3    dex
+        bpl inh1
+in_ex   ldx #4                  ; explosions burn down
+ine1    lda iex,x
+        beq ine2
+        dec iex,x
+ine2    dex
+        bpl ine1
+        ldx #0                  ; all gone and all explosions over: the boss comes
+        ldy #4
+ina1    lda ial,x
+        ora iex,x
+        bne in_draw
+        inx
+        dey
+        bpl ina1
+        jmp invend
+in_draw lda #0
+        sta ispm
+        sta imsb
+        ldx #4
+ind1    lda ial,x
+        bne ind_a
+        lda iex,x
+        bne ind_x
+        jmp ind9
+ind_x   and #3                  ; exploding
+        tay
+        lda iecol,y
+        sta icl
+        lda #spr_expl/64
+        jmp ind_p
+ind_a   lda ph                  ; alive: wobbling ghost, own colour
+        lsr
+        lsr
+        lsr
+        and #3
+        tay
+        lda gwf,y
+        pha
+        lda gtcol,x
+        sta icl
+        pla
+ind_p   sta ipp
+        ldy ispn,x
+        lda ipp
+        sta SPRPTR,y
+        lda icl
+        sta SPCOL,y
+        ldy isoff,x
+        lda ixl,x
+        sta VIC,y
+        lda iy
+        sta VIC+1,y
+        lda ispm
+        ora isbit,x
+        sta ispm
+        lda ixh,x
+        beq ind9
+        lda imsb
+        ora isbit,x
+        sta imsb
+ind9    dex
+        bpl ind1
+        lda MSBX
+        and #$0e
+        ora imsb
+        sta MSBX
+        lda SPENA
+        and #$0e
+        ora ispm
+        sta SPENA
+        rts
+
+invkill stx itmp                ; ghost X was shot: explosion + 1000 points
+        lda #0
+        sta ial,x
+        lda #14
+        sta iex,x
+        lda #0
+        ldx #$10
+        jsr addscore
+        jsr showscore
+        lda #$c8                ; bang
+        sta SID+14
+        lda #$1e
+        sta SID+15
+        lda #$81
+        sta SID+18
+        lda #0
+        sta chimeon
+        lda #10
+        sta zap
+        lda #0
+        jsr fxstart
+        lda #12
+        sta flash
+        ldx itmp
+        rts
+
+invend  lda #0                  ; raid over: boss of this level appears
+        sta invmode
+        jsr sprreset
+        lda need
+        sta lvlg
+        jsr showprog
+        jsr rgkill
+        jmp startboss
+
+ixstart .byte 34,78,122,166,210
+ispd    .byte 0,3,2,2,1,1
+isoff   .byte 0,8,10,12,14
+ispn    .byte 0,4,5,6,7
+isbit   .byte $01,$10,$20,$40,$80
+iecol   .byte 7,1,8,2
+invmode .byte 0
+idir    .byte 0
+iy      .byte 0
+icnt    .byte 0
+ispeed  .byte 0
+ispm    .byte 0
+imsb    .byte 0
+icl     .byte 0
+ipp     .byte 0
+itmp    .byte 0
+ial     .byte 0,0,0,0,0
+iex     .byte 0,0,0,0,0
+ixl     .byte 0,0,0,0,0
+ixh     .byte 0,0,0,0,0
 rprev   .byte 0
 dprel   .byte 0
 chimeon .byte 0
@@ -3500,6 +3749,7 @@ newgame lda #0
         sta dmth
         sta invt
         sta dbt
+        sta invmode
         sta gmode
         sta nm_clr              ; New York: nothing cleared yet
         sta won
@@ -3634,10 +3884,16 @@ notright jsr powupd                ; falling power-up
         lda COLLISION           ; hardware sprite collisions (read once)
         sta col
         jsr bossupdate          ; boss fight / trap / level logic
+        lda invmode
+        bne gn_inv
         jsr rgupdate            ; the floating phantom (cannot be shot)
+gn_inv
 
 ; ----- the ghost fights back: it spits slime balls that home in -------
-        lda pact
+        lda invmode             ; (the raiders do not shoot)
+        beq gn_att
+        jmp pdone
+gn_att  lda pact
         bne pmove
         lda bstate
         cmp #2
@@ -3749,10 +4005,15 @@ pl_r2
         sta VIC+12
         lda pwy
         sta VIC+13
-        clc
+        lda pwtype
+        cmp #4
+        bne pl_p1
+        lda #spr_pwx/64         ; S
+        bne pl_p2
+pl_p1   clc
         lda #spr_pwi/64         ; I, E, G or star
         adc pwtype
-        sta SPRPTR+6
+pl_p2   sta SPRPTR+6
         lda pwtype              ; glowing colours (2 per type, flip every 4 frames)
         asl
         sta t1
@@ -3888,6 +4149,8 @@ rgvis   lda spm
         sta SID+11
         lda bstate              ; (only the ordinary ghost is caught this way)
         bne fired
+        lda invmode             ; (the raiders are hit by position, see invframe)
+        bne fired
         lda col                 ; beam touching the ghost?
         and #1
         beq fired
@@ -3964,6 +4227,10 @@ flashing lda flash
         sta BORDER
         sta SPCOL
 noflash jsr ghostlook          ; wobble frame + colour of the ghost type
+        lda invmode
+        beq gn_ni
+        jsr invframe            ; hidden S round: the five raiders
+gn_ni
         lda ht                  ; red border while recovering
         beq noht
         dec ht
@@ -4281,6 +4548,7 @@ ad3     lda t1
 ; ---------------------------------------------------------------------
 startlevel
         lda #0
+        sta invmode
         sta SPENA
         jsr rginit
         jsr sprreset            ; sprite pointers + colours loaded again every level
@@ -4496,9 +4764,15 @@ maybedrop                       ; a catch rolls: 10% I, 20% E, 20% G, 5% star (4
         lda ppact
         bne md1                 ; only one at a time
         lda OSC3
-        cmp #141
+        cmp #161                ; 8%: the hidden S
         bcs md1
-        ldx #3
+        cmp #141
+        bcc md0
+        lda demo                ; (never in the demo)
+        bne md1
+        ldx #4
+        jmp md2
+md0     ldx #3
         cmp #128
         bcs md2
         ldx #2
@@ -4606,7 +4880,16 @@ gp2     cpx #2
         lda #187                ; G: two proton beams
         sta dbt
         jmp gp9
-gp3     lda lives               ; star: extra life (max 9)
+gp3     cpx #4                  ; S: the hidden space raid
+        bne gp3s
+        lda bstate
+        ora gmode
+        ora invmode
+        beq gp3r
+        rts                     ; (not during a boss fight, cutscene or another raid)
+gp3r    jsr invstart
+        jmp gp9
+gp3s    lda lives               ; star: extra life (max 9)
         cmp #9
         bcs gp9
         inc lives
@@ -7483,6 +7766,52 @@ wb9     jsr hmclr
 ;  boss shapes of Manhattan, Harbor, JFK and Statue of Liberty
 ;  (Harlem uses spr_boss).  Chosen per place with bossptr.
 ; ---------------------------------------------------------------------
+        * = $0e80               ; S power-up coin (pointer 58) and the explosion (pointer 59)
+spr_pwx
+        .byte 0,0,0
+        .byte 0,255,0
+        .byte 3,255,192
+        .byte 7,255,224
+        .byte 15,255,240
+        .byte 15,255,240
+        .byte 31,199,248
+        .byte 63,187,252
+        .byte 63,191,252
+        .byte 63,191,252
+        .byte 63,199,252
+        .byte 63,251,252
+        .byte 63,251,252
+        .byte 31,187,248
+        .byte 31,199,248
+        .byte 15,255,240
+        .byte 15,255,240
+        .byte 7,255,224
+        .byte 3,255,192
+        .byte 0,255,0
+        .byte 0,0,0
+        * = $0ec0
+spr_expl
+        .byte 0,0,0
+        .byte 0,16,0
+        .byte 0,24,0
+        .byte 8,24,32
+        .byte 6,24,96
+        .byte 3,189,192
+        .byte 3,255,192
+        .byte 1,255,128
+        .byte 1,231,128
+        .byte 31,195,240
+        .byte 63,195,252
+        .byte 3,195,192
+        .byte 1,255,128
+        .byte 3,255,128
+        .byte 3,255,192
+        .byte 7,56,224
+        .byte 4,24,32
+        .byte 0,24,0
+        .byte 0,24,0
+        .byte 0,0,0
+        .byte 0,0,0
         * = $0f00
 spr_boss_ny
         .byte 0,24,0
