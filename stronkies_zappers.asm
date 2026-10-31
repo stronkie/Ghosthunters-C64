@@ -1,4 +1,4 @@
-CODEORG = $7500
+CODEORG = $74b0
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S ZAPPERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$32,$39,$39,$35,$32,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$32,$39,$38,$37,$32,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -1165,7 +1165,7 @@ pwmsgc  .byte 3,7,13,7
 rainbow .byte 2,8,7,5,3,6,4,10
 needtab .byte 20,25,30,35,40,45,50,55,60
 fanotes .byte 5,6,7,8
-pinfy   .byte 71,95,119,143
+pinfy   .byte 68,92,116,140
 bmask   .byte 4,2,1
 pcell   .byte 160,170,170,170,170,172,172,172,172,172,190,190,190,190,190,189,189,189,189,189
 bigfont
@@ -1243,29 +1243,17 @@ pinfoscr
         .byte 1,6,3
         .text "CATCH THEM BEFORE THEY LAND!"
         .byte 0
-        .byte 3,8,1
+        .byte 3,9,1
         .text "INVINCIBLE FOR 10 SECONDS"
         .byte 0
-        .byte 4,8,12
-        .text "DROP RATE 10 PCT"
-        .byte 0
-        .byte 6,8,1
+        .byte 6,9,1
         .text "FULL ENERGY AT ONCE"
         .byte 0
-        .byte 7,8,12
-        .text "DROP RATE 20 PCT"
-        .byte 0
-        .byte 9,8,1
+        .byte 9,9,1
         .text "TWO PROTON BEAMS FOR 15 SECONDS"
         .byte 0
-        .byte 10,8,12
-        .text "DROP RATE 20 PCT"
-        .byte 0
-        .byte 12,8,1
+        .byte 12,9,1
         .text "EXTRA LIFE"
-        .byte 0
-        .byte 13,8,12
-        .text "DROP RATE 5 PCT"
         .byte 0
         .byte $ff
 
@@ -9937,8 +9925,90 @@ ptrfix  lda #spr_ghost/64
         sta SPCOL+3
         rts
 
+
+; ---- small power-up icons for the info page: 12 x 11 pixels, copied into free sprite blocks
+pi_dl   .byte $80,$c0,$40,$80
+pi_dh   .byte $0e,$0e,$03,$03
+pi_sl   .byte <pi_i,<pi_e,<pi_g,<pi_p
+pi_sh   .byte >pi_i,>pi_e,>pi_g,>pi_p
+pi_i
+        .byte 0,126,0
+        .byte 0,255,0
+        .byte 1,129,128
+        .byte 3,231,192
+        .byte 3,231,192
+        .byte 3,231,192
+        .byte 3,231,192
+        .byte 3,231,192
+        .byte 1,129,128
+        .byte 0,255,0
+        .byte 0,126,0
+pi_e
+        .byte 0,126,0
+        .byte 0,255,0
+        .byte 1,129,128
+        .byte 3,159,192
+        .byte 3,159,192
+        .byte 3,135,192
+        .byte 3,159,192
+        .byte 3,159,192
+        .byte 1,129,128
+        .byte 0,255,0
+        .byte 0,126,0
+pi_g
+        .byte 0,126,0
+        .byte 0,255,0
+        .byte 1,195,128
+        .byte 3,153,192
+        .byte 3,159,192
+        .byte 3,145,192
+        .byte 3,153,192
+        .byte 3,153,192
+        .byte 1,195,128
+        .byte 0,255,0
+        .byte 0,126,0
+pi_p
+        .byte 0,126,0
+        .byte 0,255,0
+        .byte 1,231,128
+        .byte 3,231,192
+        .byte 3,231,192
+        .byte 3,129,192
+        .byte 3,129,192
+        .byte 3,231,192
+        .byte 1,231,128
+        .byte 0,255,0
+        .byte 0,126,0
+piload  ldx #3
+pil1    lda pi_dl,x
+        sta PTR2
+        lda pi_dh,x
+        sta PTR2+1
+        ldy #63
+        lda #0
+pil2    sta (PTR2),y
+        dey
+        bpl pil2
+        lda pi_sl,x
+        sta PTR
+        lda pi_sh,x
+        sta PTR+1
+        lda PTR2
+        clc
+        adc #15
+        sta PTR2
+        ldy #32
+pil3    lda (PTR),y
+        sta (PTR2),y
+        dey
+        bpl pil3
+        dex
+        bpl pil1
+        rts
+
 showpinfo
         jsr skyscreen
+        jsr piload
         lda #<pinfoscr
         sta PTR
         lda #>pinfoscr
@@ -9946,19 +10016,19 @@ showpinfo
         jsr drawscript
         lda #$5b
         sta D011
-        lda #spr_pwi/64
+        lda #58                 ; the small icons ($0e80, $0ec0, $0340, $0380)
         sta SPRPTR
-        lda #spr_pwe/64
+        lda #59
         sta SPRPTR+1
-        lda #spr_pwg/64
+        lda #13
         sta SPRPTR+2
-        lda #spr_pws/64
+        lda #14
         sta SPRPTR+3
         ldx #0
 pn_l    txa
         asl
         tay
-        lda #40
+        lda #68
         sta VIC,y
         lda pinfy,x
         sta VIC+1,y
