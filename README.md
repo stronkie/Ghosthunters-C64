@@ -2,7 +2,7 @@
 
 A ghost-hunting game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-All releases, v1.0 to v1.9, are tested and working on a real Commodore 64 (PAL).
+Releases v1.0 to v1.9 are tested and working on a real Commodore 64 (PAL).
 
 ## Download and run
 
@@ -79,7 +79,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 
 ## Versions
 
-Each release is kept in its own folder (`v1.0` to `v1.9`), and earlier development snapshots are in `previous-versions/`.
+Each release is kept in its own folder (`v1.0` to `v1.10`), and earlier development snapshots are in `previous-versions/`.
 
 | Version | Highlights |
 |---|---|
@@ -93,6 +93,7 @@ Each release is kept in its own folder (`v1.0` to `v1.9`), and earlier developme
 | v1.7 | Animated hunter (walk and shoot frames), animated intro scene (real C64 OK) |
 | v1.8 | Wobbling ghosts, new ghost types, weather per place, boss warning screen (real C64 OK) |
 | v1.9 | JFK weather changed from wind to rain, wind code removed (real C64 OK) |
+| v1.10 | Pause menu with stats panel, music toggle, quit to title (emulator-tested) |
 
 ## Credits
 

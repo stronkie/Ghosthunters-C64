@@ -1,4 +1,4 @@
-CODEORG = $76c0
+CODEORG = $7970
 STORYN = 35
 ; =====================================================================
 ;  STRONKIE'S HUNTERS  -  Commodore 64 machine language game
@@ -93,7 +93,7 @@ STREETCOL   = 7
         * = $0801
 
         ; BASIC stub:  10 SYS 3200
-        .byte $0c,$08,$0a,$00,$9e,$33,$30,$34,$30,$30,$00,$00,$00   ; SYS 30976
+        .byte $0c,$08,$0a,$00,$9e,$33,$31,$30,$38,$38,$00,$00,$00   ; SYS 30976
 
 ; ---------------------------------------------------------------------
 ;  sprite data lives low ($0840-$0c7f) so the VIC chip can see it
@@ -2348,56 +2348,316 @@ chime   lda #$20
         rts
 
 ; ---------------------------------------------------------------------
-;  P = pause: "** PAUSED **" in the middle, everything frozen and quiet.
-;  P again = continue.  RESTORE = main menu.
+;  P = pause menu.  The scene stays saved, a panel shows the stats.
+;    P = continue   M = music on / off   Q = quit to the title (Y / N)
+;  RESTORE also leaves to the title.
 ; ---------------------------------------------------------------------
-dopause lda #0
-        sta SIDVOL
-        ldx #11
-pz1     lda SCREEN+9*40+14,x
-        sta dpbuf,x
-        lda COLORRAM+9*40+14,x
-        sta dpbuf+12,x
-        lda dptext,x
-        sta SCREEN+9*40+14,x
-        lda #1
-        sta COLORRAM+9*40+14,x
-        dex
-        bpl pz1
+PNL     = SCREEN+2*40+7         ; panel: rows 2-12, 26 columns
+dopause lda SPENA
+        sta dpsp
         lda #0
+        sta SPENA
+        sta SIDVOL
+        sta dpq
         sta dprel
+        sta dpfc
+        lda #<(SCREEN+80)       ; save rows 2-12 (screen + colour, 440 bytes)
+        sta PTR
+        lda #>(SCREEN+80)
+        sta PTR+1
+        ldx #0
+dsv1    lda SCREEN+80,x
+        sta $c000,x
+        lda COLORRAM+80,x
+        sta $c200,x
+        lda SCREEN+336,x
+        sta $c100,x
+        lda COLORRAM+336,x
+        sta $c300,x
+        inx
+        bne dsv1
+        jsr dpclr
+        lda #<dptbl
+        sta PTR2
+        lda #>dptbl
+        sta PTR2+1
+        jsr dstr
+        lda #<dpnorm
+        sta PTR2
+        lda #>dpnorm
+        sta PTR2+1
+        jsr dstr
+        jsr dpstats
+        jsr dpmus
 dpw     jsr waitframe
         jsr readinput
         lda restflag
-        bne dpx
+        beq dpw1
+        jmp dpx
+dpw1    inc dpfc                ; blinking title
+        lda dpfc
+        and #16
+        beq dpb1
+        lda #7
+        .byte $2c
+dpb1    lda #1
+        ldx #11
+dpb2    sta COLORRAM+2*40+14,x
+        dex
+        bpl dpb2
         lda key
-        cmp #41
-        bne pz3
-        lda dprel               ; P pressed again (after it was released)
-        bne dpx
-        jmp dpw
-pz3     lda #1
+        cmp #64
+        bne dpk1
+        lda #1                  ; a key has to be let go before the next one counts
         sta dprel
         jmp dpw
-dpx     ldx #11
-pz4     lda dpbuf,x
-        sta SCREEN+9*40+14,x
-        lda dpbuf+12,x
-        sta COLORRAM+9*40+14,x
-        dex
-        bpl pz4
-        lda #15
+dpk1    lda dprel
+        beq dpw
+        lda #0
+        sta dprel
+        lda dpq
+        bne dpkq
+        lda key
+        cmp #41                 ; P = continue
+        bne dpk2
+        jmp dpx
+dpk2    cmp #36                 ; M = music
+        bne dpk3
+        lda mute
+        eor #1
+        sta mute
+        jsr dpmus
+        jmp dpw
+dpk3    cmp #62                 ; Q = quit?
+        bne dpw
+        lda #1
+        sta dpq
+        jsr dpc12
+        lda #<dpconf
+        sta PTR2
+        lda #>dpconf
+        sta PTR2+1
+        jsr dstr
+        jmp dpw
+dpkq    lda key                 ; Y = yes, any other key = no
+        cmp #25
+        bne dpkn
+        lda #1
+        sta restflag
+        jmp dpx
+dpkn    lda #0
+        sta dpq
+        jsr dpc12
+        lda #<dpnorm
+        sta PTR2
+        lda #>dpnorm
+        sta PTR2+1
+        jsr dstr
+        jmp dpw
+dpx     ldx #0
+dpr1    lda $c000,x
+        sta SCREEN+80,x
+        lda $c200,x
+        sta COLORRAM+80,x
+        lda $c100,x
+        sta SCREEN+336,x
+        lda $c300,x
+        sta COLORRAM+336,x
+        inx
+        bne dpr1
+        lda dpsp
+        sta SPENA
+        lda mute
+        beq dpx2
+        lda #$20                ; music off: let the riff voices go quiet
+        sta SID+4
+        sta SID+11
+dpx2    lda #15
         sta SIDVOL
 pz5     lda restflag
         bne pz6
         jsr waitframe
         jsr readinput
         lda key
-        cmp #41
-        beq pz5
+        cmp #64
+        bne pz5
 pz6     rts
-dptext  .byte 42,42,32,16,1,21,19,5,4,32,42,42
-dpbuf   .byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+dpclr   lda #<PNL               ; blank the panel
+        sta PTR
+        lda #>PNL
+        sta PTR+1
+        ldx #11
+dpc1    ldy #25
+        lda #32
+dpc2    sta (PTR),y
+        dey
+        bpl dpc2
+        lda PTR
+        clc
+        adc #40
+        sta PTR
+        bcc dpc3
+        inc PTR+1
+dpc3    dex
+        bne dpc1
+        rts
+
+dpc12   lda #32                 ; blank the last panel row
+        ldx #25
+dpc4    sta SCREEN+12*40+7,x
+        dex
+        bpl dpc4
+        rts
+
+dstr    ldy #0                  ; draw the strings of the table at (PTR2)
+        lda (PTR2),y
+        sta PTR
+        iny
+        lda (PTR2),y
+        beq dsend
+        sta PTR+1
+        iny
+        lda (PTR2),y
+        sta dpcol
+        iny
+        sty dpy
+dsr1     ldy dpy
+        lda (PTR2),y
+        beq dsr2
+        inc dpy
+        and #$3f
+        ldy #0
+        sta (PTR),y
+        lda PTR+1
+        pha
+        clc
+        adc #$d4
+        sta PTR+1
+        lda dpcol
+        sta (PTR),y
+        pla
+        sta PTR+1
+        inc PTR
+        bne dsr1
+        inc PTR+1
+        jmp dsr1
+dsr2     inc dpy
+        lda PTR2
+        clc
+        adc dpy
+        sta PTR2
+        bcc dstr
+        inc PTR2+1
+        jmp dstr
+dsend   rts
+
+dpstats lda #0
+        sta hmask
+        lda #<(SCREEN+4*40+15)  ; score
+        sta PTR
+        lda #>(SCREEN+4*40+15)
+        sta PTR+1
+        lda sch
+        ldx scl
+        jsr put4
+        lda hsh_tab             ; best (or the current score if it is higher)
+        ldx hsl_tab
+        cmp sch
+        bcc dst1
+        bne dst2
+        cpx scl
+        bcs dst2
+dst1    lda sch
+        ldx scl
+dst2    pha
+        lda #<(SCREEN+4*40+26)
+        sta PTR
+        lda #>(SCREEN+4*40+26)
+        sta PTR+1
+        pla
+        jsr put4
+        lda lives
+        ora #$30
+        sta SCREEN+5*40+15
+        lda lvl
+        ora #$30
+        sta SCREEN+5*40+25
+        lda #<(SCREEN+6*40+23)  ; ghosts caught
+        sta PTR
+        lda #>(SCREEN+6*40+23)
+        sta PTR+1
+        lda gbh
+        ldx gbl
+        jsr put4
+        ldx nm_cur              ; place name
+        lda nm_noff,x
+        tax
+        ldy #0
+dst3    lda nm_names,x
+        and #$3f
+        sta SCREEN+7*40+9,y
+        lda #7
+        sta COLORRAM+7*40+9,y
+        inx
+        iny
+        cpy #17
+        bne dst3
+        rts
+
+dpmus   ldx #0                  ; "MUSIC ON " / "MUSIC OFF"
+        lda mute
+        beq dpm1
+        ldx #9
+dpm1    ldy #0
+dpm2    lda dpmt,x
+        and #$3f
+        sta SCREEN+8*40+9,y
+        lda #5
+        sta COLORRAM+8*40+9,y
+        inx
+        iny
+        cpy #9
+        bne dpm2
+        rts
+
+dpmt    .text "MUSIC ON "
+        .text "MUSIC OFF"
+dptbl   .byte <(SCREEN+2*40+14),>(SCREEN+2*40+14),1
+        .text "** PAUSED **"
+        .byte 0
+        .byte <(SCREEN+4*40+9),>(SCREEN+4*40+9),1
+        .text "SCORE 0000  BEST 0000"
+        .byte 0
+        .byte <(SCREEN+5*40+9),>(SCREEN+5*40+9),1
+        .text "LIVES 0   LEVEL 0"
+        .byte 0
+        .byte <(SCREEN+6*40+9),>(SCREEN+6*40+9),1
+        .text "GHOSTS CAUGHT 0000"
+        .byte 0
+        .byte <(SCREEN+9*40+9),>(SCREEN+9*40+9),15
+        .text "A D OR STICK: MOVE"
+        .byte 0
+        .byte <(SCREEN+10*40+9),>(SCREEN+10*40+9),15
+        .text "SPACE OR FIRE: BEAM"
+        .byte 0
+        .byte <(SCREEN+11*40+9),>(SCREEN+11*40+9),15
+        .text "UP OR T: GHOST TRAP"
+        .byte 0
+        .byte 0,0
+dpnorm  .byte <(SCREEN+12*40+9),>(SCREEN+12*40+9),3
+        .text "P:RESUME Q:QUIT M:MUSIC"
+        .byte 0
+        .byte 0,0
+dpconf  .byte <(SCREEN+12*40+9),>(SCREEN+12*40+9),2
+        .text "QUIT TO TITLE? Y OR N"
+        .byte 0
+        .byte 0,0
+dpsp    .byte 0
+dpq     .byte 0
+dpfc    .byte 0
+dpcol   .byte 0
+dpy     .byte 0
 
 ; ---------------------------------------------------------------------
 ;  R in the menu: all high scores back to the starting table + save
