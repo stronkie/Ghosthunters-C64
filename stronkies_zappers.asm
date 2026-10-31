@@ -7176,27 +7176,204 @@ tfade   .byte $ff
 ;  CREDITS: rolls from the bottom to the top (fine scroll), then fades
 ;  to black and the game starts again with the logo screen.
 ; ---------------------------------------------------------------------
-credits lda #<crtext
-        sta crbase
-        lda #>crtext
-        sta crbase+1
-        lda #12
-        sta crn
-        lda #24
-        sta crend
+credits jmp credpages          ; skyline pages (see the end of the file)
+chkskip lda JOY                 ; C=1 when fire or a key is pressed
+        and #$10
+        beq cks_y
+        lda KEYPRESS
+        cmp #64
+        bne cks_y
+        clc
+        rts
+cks_y   sec
+        rts
+
+endrel  jsr waitframe           ; wait until fire and keys are let go
+        jsr chkskip
+        bcs endrel
+        lda #0
+        sta KEYBUF
+        rts
+
+ew_t    .byte 0
+endhunter                       ; sprite 1 = the hunter, in front of the skyline
+        lda #172
+        sta VIC+2
+        lda #213
+        sta VIC+3
+        lda #8
+        sta SPCOL+1
+        lda #0
+        sta MSBX
+        sta SPXEX
+        sta SPYEX
+        sta SPMC
+        sta $d01b
+        lda #spr_player/64
+        sta SPRPTR+1
         lda #2
-        sta crspd
-        jsr scroller
-        bcc crfade              ; skipped: straight to the fade
-        lda #150                ; 3 seconds to read the last line
+        sta SPENA
+        rts
+
+endwave inc ew_t                ; arms up, arms down
+        lda ew_t
+        and #16
+        beq ew1
+        lda #spr_hsh/64
+        bne ew2
+ew1     lda #spr_player/64
+ew2     sta SPRPTR+1
+        rts
+
+wintally
+        jsr skyscreen
+        lda #<wintxt
+        sta PTR
+        lda #>wintxt
+        sta PTR+1
+        jsr drawscript
+        ldx #0                  ; rank from the lives left
+        lda lives
+        cmp #3
+        bcs wt_r
+        ldx #1
+        cmp #2
+        beq wt_r
+        ldx #2
+wt_r    lda wrlo,x
+        sta PTR
+        lda wrhi,x
+        sta PTR+1
+        jsr drawscript
+        lda #<(SCREEN+3*40+26)  ; ghosts busted
+        sta PTR
+        lda #>(SCREEN+3*40+26)
+        sta PTR+1
+        lda gbh
+        ldx gbl
+        jsr put4
+        lda #<(SCREEN+5*40+26)  ; lives bonus
+        sta PTR
+        lda #>(SCREEN+5*40+26)
+        sta PTR+1
+        lda bon_h
+        ldx bon_l
+        jsr put4
+        lda #<(SCREEN+6*40+26)  ; final score
+        sta PTR
+        lda #>(SCREEN+6*40+26)
+        sta PTR+1
+        lda sch
+        ldx scl
+        jsr put4
+        jsr endhunter
+        lda #$5b
+        sta D011
+        jsr sidclr              ; victory fanfare
+        lda #$08
+        sta SID+5
+        lda #$a8
+        sta SID+6
+        ldx #0
+wt_f    ldy fanotes,x
+        lda freqlo,y
+        sta SID
+        lda freqhi,y
+        sta SID+1
+        lda #$21
+        sta SID+4
+        ldy #8
+wt_w    jsr waitframe
+        jsr endwave
+        dey
+        bne wt_w
+        inx
+        cpx #4
+        bne wt_f
+        ldy #30
+wt_h    jsr waitframe
+        jsr endwave
+        dey
+        bne wt_h
+        lda #$20
+        sta SID+4
+        jsr tunechk             ; the tune again
+        jsr endrel
+        lda #60
         sta crcnt
-k_cr4   jsr waitframe
+wl0     jsr waitframe
+        jsr endwave
+        dec crcnt
+        bne wl0
+        lda #<800               ; fire, a key or 16 seconds
+        sta fw_n
+        lda #>800
+        sta fw_n+1
+wl1     jsr waitframe
+        jsr endwave
+        lda ew_t
+        and #32
+        beq wl2
+        lda #11
+        bne wl3
+wl2     lda #1
+wl3     ldx #9
+wl4     sta COLORRAM+11*40+15,x
+        dex
+        bpl wl4
+        jsr chkskip
+        bcs wl9
+        lda fw_n
+        bne wl5
+        dec fw_n+1
+wl5     dec fw_n
+        lda fw_n
+        ora fw_n+1
+        bne wl1
+wl9     lda #0
+        sta KEYBUF
+        sta SPENA
+        rts
+
+cr_pg   .byte 0
+credpages
+        jsr tunechk
+        jsr endrel
+        lda #0
+        sta cr_pg
+cp_l    jsr skyscreen
+        ldx cr_pg
+        lda crplo,x
+        sta PTR
+        lda crphi,x
+        sta PTR+1
+        jsr drawscript
+        jsr endhunter
+        lda #$5b
+        sta D011
+        lda #230
+        sta crcnt
+cp_w    jsr waitframe
         lda mute
-        bne k_cr5
+        bne cp_m
         jsr tplay
-k_cr5   dec crcnt
-        bne k_cr4
+cp_m    jsr endwave
+        lda crcnt
+        cmp #190
+        bcs cp_n
+        jsr chkskip
+        bcc cp_n
+        jmp crfade
+cp_n    dec crcnt
+        bne cp_w
+        inc cr_pg
+        lda cr_pg
+        cmp #3
+        bcc cp_l
+        jmp crfade
+
 crfade  lda #0
+        sta SPENA
         sta crfx
 k_cf1   ldx crfx                ; text grey steps down to black, volume follows
         lda crfcol,x
@@ -7219,6 +7396,7 @@ k_cf3   lda crvol
         lda crfx
         cmp #4
         bcc k_cf1
+        jsr ecmoff
         lda #$0b
         sta D011                ; black screen
         jsr sidclr
@@ -7404,20 +7582,6 @@ crfx    .byte 0
 crvol   .byte 0
 crfcol  .byte 15,12,11,0
 crfvol  .byte 11,7,3,0
-crtext
-        .text "        PROGRAMMING AI : CLAUDE         "
-        .text "         MUSIC : RAY PARKER JR          "
-        .text "          GAMEPLAY : STRONKIE           "
-        .text "           TESTING : STRONKIE           "
-        .text "         THERE IS NO COPY RIGHT         "
-        .text "        FEEL FREE TO SHARE THIS.        "
-        .text "                                        "
-        .text "         THIS GAME IS BASED ON          "
-        .text "                                        "
-        .text "           GHOSTBUSTERS GAME            "
-        .text "                                        "
-        .text "          STAY TUNED FOR MORE           "
-
         * = $20b0               ; story text (free RAM between the tune and the phantom sprite)
 stext
         .text "             GHOST ZAPPERS              "
@@ -8628,21 +8792,7 @@ wb2     clc
         dex
         bne wb1
         cli
-wb9     jsr hmclr
-        lda #<(SCREEN+743)
-        sta PTR
-        lda #>(SCREEN+743)
-        sta PTR+1
-        lda bon_h
-        ldx bon_l
-        jsr put4
-        lda #<(SCREEN+823)
-        sta PTR
-        lda #>(SCREEN+823)
-        sta PTR+1
-        lda sch
-        ldx scl
-        jmp put4
+wb9     jmp hmclr
 
 ; ---------------------------------------------------------------------
 ;  boss shapes of Manhattan, Harbor, JFK and Statue of Liberty
@@ -10360,20 +10510,21 @@ ws2     sta SCREEN+767,x
         jsr tunechk
         jsr winbonus
         jsr fwinit
-        lda #<500               ; ten seconds of fireworks behind the text
+        jsr endrel              ; let go of fire first
+        lda #250                ; five seconds of fireworks (fire skips)
         sta fw_n
-        lda #>500
-        sta fw_n+1
 ws3     jsr waitframe
         jsr fwupd
         lda fw_n
-        bne ws4
-        dec fw_n+1
+        cmp #220
+        bcs ws4
+        jsr chkskip
+        bcs ws5
 ws4     dec fw_n
-        lda fw_n
-        ora fw_n+1
         bne ws3
+ws5     jsr wintally            ; the skyline status screen with the hunter waving
         jsr nm_fade             ; fade to the world map: back to Amsterdam
+        jsr ecmoff
         lda #1
         sta flrev
         jsr flight
@@ -10448,13 +10599,7 @@ wn_txt
         .text "NEW YORK CITY"
         .byte 0
         .byte 98,6,1
-        .text "YOU CAN GO HOME NOW"
-        .byte 0
-        .byte 218,6,7
-        .text "LIVES BONUS:"
-        .byte 0
-        .byte 42,7,7
-        .text "FINAL SCORE:"
+        .text "THE CITY IS SAVED!"
         .byte 0
         .byte $ff
 
@@ -11630,3 +11775,94 @@ mmagain
 ; ---------------------------------------------------------------------
 ;  BONUS GAMES page and HOW TO PLAY page
 ; ---------------------------------------------------------------------
+
+; ---------------------------------------------------------------------
+;  THE ENDING: skippable fireworks, the status screen and the credits,
+;  all in front of the skyline of the game
+; ---------------------------------------------------------------------
+wintxt
+        .byte 1,12,7
+        .text "MISSION COMPLETE"
+        .byte 0
+        .byte 3,9,1
+        .text "GHOSTS BUSTED"
+        .byte 0
+        .byte 3,26,7
+        .text "0000"
+        .byte 0
+        .byte 4,9,1
+        .text "BOSSES BEATEN"
+        .byte 0
+        .byte 4,26,7
+        .text "0004"
+        .byte 0
+        .byte 5,9,1
+        .text "LIVES BONUS"
+        .byte 0
+        .byte 5,26,7
+        .text "0000"
+        .byte 0
+        .byte 6,9,1
+        .text "FINAL SCORE"
+        .byte 0
+        .byte 6,26,7
+        .text "0000"
+        .byte 0
+        .byte 8,9,1
+        .text "YOUR RANK"
+        .byte 0
+        .byte 11,15,1
+        .text "PRESS FIRE"
+        .byte 0
+        .byte $ff
+wrlo    .byte <wr0,<wr1,<wr2
+wrhi    .byte >wr0,>wr1,>wr2
+wr0     .byte 8,19,13
+        .text "GHOST LEGEND"
+        .byte 0,$ff
+wr1     .byte 8,19,14
+        .text "GHOST HUNTER"
+        .byte 0,$ff
+wr2     .byte 8,19,10
+        .text "ROOKIE ZAPPER"
+        .byte 0,$ff
+
+; ---- credits: three skyline pages, the hunter waving
+crplo   .byte <crp1,<crp2,<crp3
+crphi   .byte >crp1,>crp2,>crp3
+crp1    .byte 3,16,7
+        .text "CREDITS"
+        .byte 0
+        .byte 6,8,1
+        .text "PROGRAMMING AI : CLAUDE"
+        .byte 0
+        .byte 8,9,1
+        .text "MUSIC : RAY PARKER JR"
+        .byte 0
+        .byte 10,10,1
+        .text "GAMEPLAY : STRONKIE"
+        .byte 0
+        .byte 12,10,1
+        .text "TESTING : STRONKIE"
+        .byte 0,$ff
+crp2    .byte 4,9,1
+        .text "THERE IS NO COPY RIGHT"
+        .byte 0
+        .byte 6,8,1
+        .text "FEEL FREE TO SHARE THIS."
+        .byte 0
+        .byte 9,9,14
+        .text "THIS GAME IS BASED ON"
+        .byte 0
+        .byte 11,11,7
+        .text "GHOSTBUSTERS GAME"
+        .byte 0,$ff
+crp3    .byte 4,16,7
+        .text "THE END"
+        .byte 0
+        .byte 7,10,1
+        .text "THANKS FOR PLAYING!"
+        .byte 0
+        .byte 10,10,14
+        .text "STAY TUNED FOR MORE"
+        .byte 0,$ff
