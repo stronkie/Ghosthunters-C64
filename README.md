@@ -88,7 +88,6 @@ The final release is in `v2` (`ghost_zappers_v2.prg/.d64/.asm`). Older releases 
 | Version | Highlights |
 |---|---|
 | v1.0 | First complete game (real C64 OK) |
-| **V2** | Final release: identical to v1.27, only the file names changed to `ghost_zappers_v2` |
 | v1.1 | Per-place themes, place name on the HUD, "NEXT STOP" screen, low-power beep, boss fanfare (real C64 OK) |
 | v1.2 | More free memory (BASIC off, code under BASIC) (real C64 OK) |
 | v1.3 | Better Hall of Fame (place reached, star for winners) (real C64 OK) |
@@ -118,6 +117,7 @@ The final release is in `v2` (`ghost_zappers_v2.prg/.d64/.asm`). Older releases 
 | v1.25 | Easy / Normal / Hard mode in the main menu; combo scoring for quick hits (real C64 OK) |
 | v1.26 | Power-up info page: small icons, drop rates removed (real C64 OK) |
 | v1.27 | New bonus game GHOST INVADERS (4th item); quarter-wave sine tables and intro scroller buffer moved to free RAM (real C64 OK) |
+| **V2** | Final release: identical to v1.27, only the file names changed to `ghost_zappers_v2` |
 
 ## Credits
 
