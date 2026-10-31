@@ -9,4 +9,4 @@ New pause menu (press P during play):
 - The game screen is restored exactly when you resume.
 - Everything else is the same as v1.9.
 
-Built and regression-tested in a custom 6502 emulator. Not yet confirmed on a real C64.
+Built and regression-tested in a custom 6502 emulator. Tested on a real Commodore 64 and working.

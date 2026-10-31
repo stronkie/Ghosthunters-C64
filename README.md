@@ -2,7 +2,7 @@
 
 A ghost-hunting game for the **Commodore 64**, written entirely in 6502 machine language. Grab your proton blaster, chase slime-spitting ghosts through a scrolling New York skyline, trap the boss of each district, and clear the city to fly home to Amsterdam.
 
-Releases v1.0 to v1.9 are tested and working on a real Commodore 64 (PAL).
+All releases, v1.0 to v1.10, are tested and working on a real Commodore 64 (PAL).
 
 ## Download and run
 
@@ -74,7 +74,7 @@ Boss attacks: **homing** slime, **spread** (two balls fly apart), **sniper** (fa
 - Pure 6502 assembly, built with a small custom Python assembler, packed with a custom LZ packer into a self-extracting PRG.
 - BASIC is switched off while the game runs (`$01 = $36`), which frees RAM under the BASIC ROM at `$A000` for cutscene code, sound effects and the places of New York.
 - Memory map: sprites and variables low (`$0801-$0FFF`), tune at `$1000`, map and charset in VIC bank 0 up to `$3FFF`, data from `$4000`, main code below `$A000`.
-- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware (v1.0 to v1.9).
+- Developed and regression-tested in a custom 6502 emulator, then confirmed on real hardware (v1.0 to v1.10).
 - The Hall of Fame file `HIGHSCORE` is a 120-byte SEQ file; old 110-byte files are converted automatically.
 
 ## Versions
@@ -93,7 +93,7 @@ Each release is kept in its own folder (`v1.0` to `v1.10`), and earlier developm
 | v1.7 | Animated hunter (walk and shoot frames), animated intro scene (real C64 OK) |
 | v1.8 | Wobbling ghosts, new ghost types, weather per place, boss warning screen (real C64 OK) |
 | v1.9 | JFK weather changed from wind to rain, wind code removed (real C64 OK) |
-| v1.10 | Pause menu with stats panel, music toggle, quit to title (emulator-tested) |
+| v1.10 | Pause menu with stats panel, music toggle, quit to title (real C64 OK) |
 
 ## Credits
 
