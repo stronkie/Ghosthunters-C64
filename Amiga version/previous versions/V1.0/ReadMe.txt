@@ -1,0 +1,33 @@
+GHOST ZAPPERS - Amiga 500 version
+Created By Mark Stronks (Stronkie)
+Programming AI : Claude  -  Original music : Claude
+
+Port of the C64 game "Stronkie's Zappers / Ghost Zappers".
+Runs on an Amiga 500 with Kickstart 1.3 (PAL), 512K chip RAM.
+The 512K trapdoor RAM is used for program data when present.
+
+STARTING
+  Boot this disk (or select the ADF on the Gotek) - it starts by itself.
+  From Workbench 1.3: open the disk and double-click the GhostZappers icon.
+  From the CLI: type GhostZappers
+
+CONTROLS (joystick in port 2, or keyboard)
+  Left / Right  or  A / D ......... move
+  Fire          or  Space ......... proton beam
+  Stick up      or  T ............. deploy the ghost trap
+  P or Esc ........................ pause menu (Q = quit to title)
+  M ............................... music on / off
+
+HOW TO PLAY
+  Hold the proton beam on a ghost to catch it. Catch 20 ghosts and the
+  boss arrives. Hit the boss 3 times to stun him, stand under him and
+  deploy the trap. Dodge the slime! Watch your energy - the pack
+  overheats. Catch power-ups before they land.
+  Clear all five New York locations: JFK Airport, Harbor, Statue of
+  Liberty, Harlem and Manhattan - where the Clockmaker waits.
+
+BONUS GAMES
+  Slime Dodge, Ghost Whack, Memory Ghosts and Ghost Invaders.
+
+High scores and bonus game records are saved to the file
+GhostZappers.hi on this disk (keep the disk / ADF write enabled).
