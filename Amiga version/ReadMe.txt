@@ -1,4 +1,4 @@
-GHOST ZAPPERS V1.1 - Amiga 500 version
+GHOST ZAPPERS V1.2 - Amiga 500 version
 Created By Mark Stronks (Stronkie)
 Programming AI : Claude  -  Original music : Claude
 
@@ -27,6 +27,14 @@ HOW TO PLAY
   Clear all five New York places: Harlem, Manhattan, the Harbor,
   JFK Airport and the Statue of Liberty. Every life left at the end
   is worth 1000 points.
+  When the slime gets you the game stops: "HE SLIMED ME!". After that
+  you are invincible for 3 seconds (the hunter blinks).
+  Every cleared place pays a counted bonus: 5 points per ghost,
+  250 for the boss, your power left and 500 if you were never slimed.
+
+DEMO MODE
+  Leave the main menu alone for 20 seconds and the computer plays.
+  Press fire, move the stick or press any key to stop it.
 
 TEST CHEAT
   Type G H O S T in the main menu. The screen flashes and
